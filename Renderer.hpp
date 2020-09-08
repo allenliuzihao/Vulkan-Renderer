@@ -30,8 +30,9 @@ private:
     
     void createInstance();
     
+    std::vector<const char*> getRequiredExtensions();
     
-    bool checkExtensionsSupport(const char** glfwExtensions, uint32_t glfwExtensionCount);
+    bool checkExtensionsSupport(const std::vector<const char*> & requiredExtensions);
     bool checkValidationLayerSupport();
 };
 

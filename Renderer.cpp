@@ -28,9 +28,8 @@ void Renderer::createInstance(){
                                 "No Engine", VK_MAKE_VERSION(1, 0, 0),
                                 VK_API_VERSION_1_2);
     
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    if(!checkExtensionsSupport(glfwExtensions, glfwExtensionCount)){
+    std::vector<const char*> requiredExtensions = getRequiredExtensions();
+    if(!checkExtensionsSupport(requiredExtensions)){
         throw std::runtime_error("failed to create instance: not all requested extensions supported.");
     }
     
@@ -45,8 +44,20 @@ void Renderer::createInstance(){
         enabledLayerNames = validationLayers.data();
     }
     
-    vk::InstanceCreateInfo instanceInfo({}, &appInfo, numLayers, enabledLayerNames, glfwExtensionCount, glfwExtensions);
+    vk::InstanceCreateInfo instanceInfo({}, &appInfo, numLayers, enabledLayerNames, static_cast<uint32_t>(requiredExtensions.size()), requiredExtensions.data());
     instance = vk::createInstanceUnique(instanceInfo);
+}
+
+std::vector<const char*> Renderer::getRequiredExtensions(){
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+    if (enableValidationLayers) {
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
+    return extensions;
 }
 
 bool Renderer::checkValidationLayerSupport(){
@@ -65,15 +76,15 @@ bool Renderer::checkValidationLayerSupport(){
     return true;
 }
 
-bool Renderer::checkExtensionsSupport(const char** glfwExtensions, uint32_t glfwExtensionCount){
+bool Renderer::checkExtensionsSupport(const std::vector<const char*> & requiredExtensions){
     std::vector<vk::ExtensionProperties> extensions = vk::enumerateInstanceExtensionProperties();
     std::unordered_set<std::string> supportedExtensions;
     for(const auto & extension : extensions){
         supportedExtensions.insert(extension.extensionName);
     }
     
-    for(uint32_t i = 0; i < glfwExtensionCount; ++i){
-        if(supportedExtensions.find(glfwExtensions[i]) == supportedExtensions.end()){
+    for(const auto & requiredExtension : requiredExtensions){
+        if(supportedExtensions.find(requiredExtension) == supportedExtensions.end()){
             return false;
         }
     }
