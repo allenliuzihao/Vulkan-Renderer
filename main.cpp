@@ -18,6 +18,8 @@
 #include "Utilities.h"
 #include "Renderer.hpp"
 
+Renderer renderer;
+
 int main() {
     
     glfwInit();
@@ -26,16 +28,17 @@ int main() {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-
-    std::vector<vk::ExtensionProperties> extensions = vk::enumerateInstanceExtensionProperties();
-    std::cout << extensions.size() << " extensions supported\n";
-
+    
+    renderer.init();
+    
     while(!glfwWindowShouldClose(window)) {
      glfwPollEvents();
     }
 
     glfwDestroyWindow(window);
     glfwTerminate();
+    
+    renderer.cleanUp();
     
     return 0;
 }

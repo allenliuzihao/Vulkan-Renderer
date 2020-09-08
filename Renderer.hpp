@@ -16,15 +16,23 @@
 #include <stdexcept>
 #include <cstdlib>
 
+#include <unordered_set>
+
+#include "Utilities.h"
+
 class Renderer{
 public:
     void init();
     void cleanUp();
 
 private:
+    vk::UniqueInstance instance;
     
     void createInstance();
     
+    
+    bool checkExtensionsSupport(const char** glfwExtensions, uint32_t glfwExtensionCount);
+    bool checkValidationLayerSupport();
 };
 
 #endif /* Renderer_hpp */
