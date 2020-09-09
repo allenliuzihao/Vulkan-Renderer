@@ -3,11 +3,7 @@
 void Renderer::init(){
     try {
         createInstance();
-
-    }
-    catch (vk::SystemError &err){
-        std::cerr << "vk::SystemError: " << err.what() << std::endl;
-        exit(-1);
+        setUpDebugMessenger();
     }
     catch (std::exception &err){
         std::cerr << "std::exception: " << err.what() << std::endl;
@@ -20,14 +16,22 @@ void Renderer::init(){
 }
 
 void Renderer::cleanUp(){
+    if (enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    }
     
+    vkDestroyInstance(instance, nullptr);
 }
 
 void Renderer::createInstance(){
-    vk::ApplicationInfo appInfo("Vulkan Renderer", VK_MAKE_VERSION(1, 0, 0),
-                                "No Engine", VK_MAKE_VERSION(1, 0, 0),
-                                VK_API_VERSION_1_2);
-    
+    VkApplicationInfo appInfo {};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "Vulkan Renderer";
+    appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
+    appInfo.pEngineName = "No Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+    appInfo.apiVersion = VK_API_VERSION_1_2;
+
     std::vector<const char*> requiredExtensions = getRequiredExtensions();
     if(!checkExtensionsSupport(requiredExtensions)){
         throw std::runtime_error("failed to create instance: not all requested extensions supported.");
@@ -37,15 +41,29 @@ void Renderer::createInstance(){
         throw std::runtime_error("validation layers requested, but not available!");
     }
     
-    uint32_t numLayers = 0;
-    const char*const* enabledLayerNames = {};
-    if(enableValidationLayers){
-        numLayers = static_cast<uint32_t>(validationLayers.size());
-        enabledLayerNames = validationLayers.data();
-    }
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
+    createInfo.ppEnabledExtensionNames = requiredExtensions.data();
     
-    vk::InstanceCreateInfo instanceInfo({}, &appInfo, numLayers, enabledLayerNames, static_cast<uint32_t>(requiredExtensions.size()), requiredExtensions.data());
-    instance = vk::createInstanceUnique(instanceInfo);
+    if(enableValidationLayers){
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+        
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        populateDebugMessengerCreateInfo(createInfo);
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &createInfo;
+    } else {
+        createInfo.enabledLayerCount = 0;
+        createInfo.pNext = nullptr;
+    }
+
+    
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+    if(result != VK_SUCCESS){
+        throw std::runtime_error("failed to create vulkan instance.");
+    }
 }
 
 std::vector<const char*> Renderer::getRequiredExtensions(){
@@ -61,66 +79,77 @@ std::vector<const char*> Renderer::getRequiredExtensions(){
 }
 
 bool Renderer::checkValidationLayerSupport(){
-    std::vector<vk::LayerProperties> availableLayers = vk::enumerateInstanceLayerProperties();
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    
     return std::all_of(validationLayers.begin(), validationLayers.end(), [&availableLayers](const char* requiredLayer) {
-        return std::find_if(availableLayers.begin(), availableLayers.end(), [&requiredLayer](vk::LayerProperties const & availableLayer){
+        return std::find_if(availableLayers.begin(), availableLayers.end(), [&requiredLayer](VkLayerProperties const & availableLayer){
             return strcmp(availableLayer.layerName, requiredLayer) == 0;
         }) != availableLayers.end();
     });
 }
 
 bool Renderer::checkExtensionsSupport(const std::vector<const char*> & requiredExtensions){
-    std::vector<vk::ExtensionProperties> availableExtensions = vk::enumerateInstanceExtensionProperties();
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
     
     return std::all_of(requiredExtensions.begin(), requiredExtensions.end(), [&availableExtensions](const char* requiredExtension) {
-        return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&requiredExtension](vk::ExtensionProperties const & availableExtension){
+        return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&requiredExtension](VkExtensionProperties const & availableExtension){
             return strcmp(availableExtension.extensionName, requiredExtension) == 0;
         }) != availableExtensions.end();
     });
 }
 
-// adapted from https://github.com/KhronosGroup/Vulkan-Hpp/blob/master/samples/EnableValidationWithCallback/EnableValidationWithCallback.cpp
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
-                                                       VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
-                                                       VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
-                                                       void* pUserData){
-    std::string message;
-    message += vk::to_string( static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>( messageSeverity ) ) + ": " +
-               vk::to_string( static_cast<vk::DebugUtilsMessageTypeFlagsEXT>( messageTypes ) ) + ":\n";
-    message += std::string( "\t" ) + "messageIDName   = <" + pCallbackData->pMessageIdName + ">\n";
-    message += std::string( "\t" ) + "messageIdNumber = " + std::to_string( pCallbackData->messageIdNumber ) + "\n";
-    message += std::string( "\t" ) + "message         = <" + pCallbackData->pMessage + ">\n";
-    if ( 0 < pCallbackData->queueLabelCount )
-    {
-        message += std::string( "\t" ) + "Queue Labels:\n";
-        for ( uint8_t i = 0; i < pCallbackData->queueLabelCount; i++ )
-        {
-            message += std::string( "\t\t" ) + "labelName = <" + pCallbackData->pQueueLabels[i].pLabelName + ">\n";
-        }
-    }
-    if ( 0 < pCallbackData->cmdBufLabelCount )
-    {
-        message += std::string( "\t" ) + "CommandBuffer Labels:\n";
-        for ( uint8_t i = 0; i < pCallbackData->cmdBufLabelCount; i++ )
-        {
-            message += std::string( "\t\t" ) + "labelName = <" + pCallbackData->pCmdBufLabels[i].pLabelName + ">\n";
-        }
-    }
-    if ( 0 < pCallbackData->objectCount )
-    {
-        for (uint8_t i = 0; i < pCallbackData->objectCount; i++ )
-        {
-            message += std::string( "\t" ) + "Object " + std::to_string( i ) + "\n";
-            message += std::string( "\t\t" ) + "objectType   = " + vk::to_string( static_cast<vk::ObjectType>( pCallbackData->pObjects[i].objectType ) ) + "\n";
-            message += std::string( "\t\t" ) + "objectHandle = " + std::to_string( pCallbackData->pObjects[i].objectHandle ) + "\n";
-            if (pCallbackData->pObjects[i].pObjectName )
-            {
-                message += std::string( "\t\t" ) + "objectName   = <" + pCallbackData->pObjects[i].pObjectName + ">\n";
-            }
-        }
+void Renderer::setUpDebugMessenger(){
+    if(!enableValidationLayers){
+        return;
     }
 
-    std::cout << message << std::endl;
-        
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
+    populateDebugMessengerCreateInfo(createInfo);
+    
+    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+        throw std::runtime_error("failed to set up debug messenger!");
+    }
+}
+
+void Renderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT & createInfo){
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.pfnUserCallback = debugMessageFunc;
+}
+
+VkResult Renderer::CreateDebugUtilsMessengerEXT(VkInstance instance,
+                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+                                      const VkAllocationCallbacks* pAllocator,
+                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void Renderer::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL Renderer::debugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+                                                          VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
+                                                          VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
+                                                          void* pUserData){
+    std::cerr << pCallbackData->pMessage << std::endl;
     return VK_FALSE;
 }
