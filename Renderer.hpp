@@ -34,6 +34,7 @@ private:
     
     // vulkan queues
     VkQueue graphicsQueue;
+    VkQueue presentQueue;
     
     // surface
     VkSurfaceKHR surface;
