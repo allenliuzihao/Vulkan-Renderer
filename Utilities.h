@@ -4,6 +4,15 @@
 #pragma once
 
 #include <vector>
+#include <optional>
+
+struct QueueFamilyIndices{
+    std::optional<uint32_t> graphicsFamily;
+    
+    bool isComplete(){
+        return graphicsFamily.has_value();
+    }
+};
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
