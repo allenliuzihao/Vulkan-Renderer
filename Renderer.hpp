@@ -50,7 +50,9 @@ private:
     
     std::vector<const char*> getRequiredExtensions();
     
+    
     bool checkExtensionsSupport(const std::vector<const char*> & requiredExtensions);
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     bool checkValidationLayerSupport();
     
     // debugger

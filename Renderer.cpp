@@ -175,7 +175,9 @@ QueueFamilyIndices Renderer::findQueueFamilies(VkPhysicalDevice device){
 bool Renderer::isDeviceSuitable(VkPhysicalDevice device){
     QueueFamilyIndices indices = findQueueFamilies(device);
     
-    return indices.isComplete();
+    bool extensionSupported = checkDeviceExtensionSupport(device);
+    
+    return extensionSupported && indices.isComplete();
 }
 
 std::vector<const char*> Renderer::getRequiredExtensions(){
@@ -188,6 +190,20 @@ std::vector<const char*> Renderer::getRequiredExtensions(){
     }
 
     return extensions;
+}
+
+bool Renderer::checkDeviceExtensionSupport(VkPhysicalDevice device){
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+    
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+    return std::all_of(deviceExtensions.begin(), deviceExtensions.end(), [&availableExtensions](const char* deviceExtension){
+        return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&deviceExtension](VkExtensionProperties availableExtension){
+            return strcmp(deviceExtension, availableExtension.extensionName) == 0;
+        }) != availableExtensions.end();
+    });
 }
 
 bool Renderer::checkValidationLayerSupport(){
