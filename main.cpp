@@ -27,7 +27,7 @@ int main() {
     
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     
-    renderer.init();
+    renderer.init(window);
     
     while(!glfwWindowShouldClose(window)) {
      glfwPollEvents();

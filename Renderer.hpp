@@ -21,10 +21,10 @@
 
 class Renderer{
 public:
-    void init();
+    void init(GLFWwindow* window);
     void cleanUp();
 
-private:
+private:    
     // vulkan instance
     VkInstance instance;
     
@@ -35,12 +35,16 @@ private:
     // vulkan queues
     VkQueue graphicsQueue;
     
+    // surface
+    VkSurfaceKHR surface;
+    
     void createInstance();
+    void createSurface(GLFWwindow* window);
     void createLogicalDevice();
     
     // devices
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     void selectPhysicalDevice();
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
     
     std::vector<const char*> getRequiredExtensions();
