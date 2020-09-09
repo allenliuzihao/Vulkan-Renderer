@@ -61,33 +61,66 @@ std::vector<const char*> Renderer::getRequiredExtensions(){
 }
 
 bool Renderer::checkValidationLayerSupport(){
-    std::vector<vk::LayerProperties> layers = vk::enumerateInstanceLayerProperties();
-    std::unordered_set<std::string> supportedLayers;
-    for(const auto & layer : layers){
-        supportedLayers.insert(layer.layerName);
-    }
-    
-    for(const auto & layerName : validationLayers){
-        if(supportedLayers.find(layerName) == supportedLayers.end()){
-            return false;
-        }
-    }
-    
-    return true;
+    std::vector<vk::LayerProperties> availableLayers = vk::enumerateInstanceLayerProperties();
+    return std::all_of(validationLayers.begin(), validationLayers.end(), [&availableLayers](const char* requiredLayer) {
+        return std::find_if(availableLayers.begin(), availableLayers.end(), [&requiredLayer](vk::LayerProperties const & availableLayer){
+            return strcmp(availableLayer.layerName, requiredLayer) == 0;
+        }) != availableLayers.end();
+    });
 }
 
 bool Renderer::checkExtensionsSupport(const std::vector<const char*> & requiredExtensions){
-    std::vector<vk::ExtensionProperties> extensions = vk::enumerateInstanceExtensionProperties();
-    std::unordered_set<std::string> supportedExtensions;
-    for(const auto & extension : extensions){
-        supportedExtensions.insert(extension.extensionName);
-    }
+    std::vector<vk::ExtensionProperties> availableExtensions = vk::enumerateInstanceExtensionProperties();
     
-    for(const auto & requiredExtension : requiredExtensions){
-        if(supportedExtensions.find(requiredExtension) == supportedExtensions.end()){
-            return false;
+    return std::all_of(requiredExtensions.begin(), requiredExtensions.end(), [&availableExtensions](const char* requiredExtension) {
+        return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&requiredExtension](vk::ExtensionProperties const & availableExtension){
+            return strcmp(availableExtension.extensionName, requiredExtension) == 0;
+        }) != availableExtensions.end();
+    });
+}
+
+// adapted from https://github.com/KhronosGroup/Vulkan-Hpp/blob/master/samples/EnableValidationWithCallback/EnableValidationWithCallback.cpp
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+                                                       VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
+                                                       VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
+                                                       void* pUserData){
+    std::string message;
+    message += vk::to_string( static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>( messageSeverity ) ) + ": " +
+               vk::to_string( static_cast<vk::DebugUtilsMessageTypeFlagsEXT>( messageTypes ) ) + ":\n";
+    message += std::string( "\t" ) + "messageIDName   = <" + pCallbackData->pMessageIdName + ">\n";
+    message += std::string( "\t" ) + "messageIdNumber = " + std::to_string( pCallbackData->messageIdNumber ) + "\n";
+    message += std::string( "\t" ) + "message         = <" + pCallbackData->pMessage + ">\n";
+    if ( 0 < pCallbackData->queueLabelCount )
+    {
+        message += std::string( "\t" ) + "Queue Labels:\n";
+        for ( uint8_t i = 0; i < pCallbackData->queueLabelCount; i++ )
+        {
+            message += std::string( "\t\t" ) + "labelName = <" + pCallbackData->pQueueLabels[i].pLabelName + ">\n";
         }
     }
-    
-    return true;
+    if ( 0 < pCallbackData->cmdBufLabelCount )
+    {
+        message += std::string( "\t" ) + "CommandBuffer Labels:\n";
+        for ( uint8_t i = 0; i < pCallbackData->cmdBufLabelCount; i++ )
+        {
+            message += std::string( "\t\t" ) + "labelName = <" + pCallbackData->pCmdBufLabels[i].pLabelName + ">\n";
+        }
+    }
+    if ( 0 < pCallbackData->objectCount )
+    {
+        for (uint8_t i = 0; i < pCallbackData->objectCount; i++ )
+        {
+            message += std::string( "\t" ) + "Object " + std::to_string( i ) + "\n";
+            message += std::string( "\t\t" ) + "objectType   = " + vk::to_string( static_cast<vk::ObjectType>( pCallbackData->pObjects[i].objectType ) ) + "\n";
+            message += std::string( "\t\t" ) + "objectHandle = " + std::to_string( pCallbackData->pObjects[i].objectHandle ) + "\n";
+            if (pCallbackData->pObjects[i].pObjectName )
+            {
+                message += std::string( "\t\t" ) + "objectName   = <" + pCallbackData->pObjects[i].pObjectName + ">\n";
+            }
+        }
+    }
+
+    std::cout << message << std::endl;
+        
+    return VK_FALSE;
 }

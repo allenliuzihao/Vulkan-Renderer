@@ -34,6 +34,11 @@ private:
     
     bool checkExtensionsSupport(const std::vector<const char*> & requiredExtensions);
     bool checkValidationLayerSupport();
+    
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+                                                           VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
+                                                           VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
+                                                           void* pUserData);
 };
 
 #endif /* Renderer_hpp */
