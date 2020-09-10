@@ -42,6 +42,9 @@ private:
     
     // swapchain
     VkSwapchainKHR swapchain;
+    std::vector<VkImage> swapchainImages;
+    VkFormat swapchainImageFormat;
+    VkExtent2D swapchainExtent;
     
     void createInstance();
     void createSurface(GLFWwindow* window);
