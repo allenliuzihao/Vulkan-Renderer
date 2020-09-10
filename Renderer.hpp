@@ -43,6 +43,7 @@ private:
     // swapchain
     VkSwapchainKHR swapchain;
     std::vector<VkImage> swapchainImages;
+    std::vector<VkImageView> swapchainImageViews;
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
     
@@ -50,6 +51,7 @@ private:
     void createSurface(GLFWwindow* window);
     void createLogicalDevice();
     void createSwapchain();
+    void createImageViews();
     
     // devices
     void selectPhysicalDevice();
