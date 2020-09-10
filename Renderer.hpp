@@ -47,6 +47,9 @@ private:
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
     
+    // pipeline
+    VkPipelineLayout pipelineLayout;
+    
     void createInstance();
     void createSurface(GLFWwindow* window);
     void createLogicalDevice();
