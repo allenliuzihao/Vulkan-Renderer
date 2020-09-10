@@ -10,10 +10,11 @@
 #include <GLFW/glfw3.h>
 #pragma clang diagnostic pop
 
-#include <iostream>
-#include <stdexcept>
 #include <cstdlib>
-
+#include <cstdint> // Necessary for UINT32_MAX
+#include <iostream>
+#include <algorithm>
+#include <stdexcept>
 #include <optional>
 #include <unordered_set>
 
@@ -39,18 +40,29 @@ private:
     // surface
     VkSurfaceKHR surface;
     
+    // swapchain
+    VkSwapchainKHR swapchain;
+    
     void createInstance();
     void createSurface(GLFWwindow* window);
     void createLogicalDevice();
+    void createSwapchain();
     
     // devices
     void selectPhysicalDevice();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
     
+    // getters
     std::vector<const char*> getRequiredExtensions();
+    SwapChainSupportDetails querySwapchainSupport(VkPhysicalDevice);
     
+    // chooser
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     
+    // checkers
     bool checkExtensionsSupport(const std::vector<const char*> & requiredExtensions);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     bool checkValidationLayerSupport();

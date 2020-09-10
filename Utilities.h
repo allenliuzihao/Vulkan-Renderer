@@ -6,15 +6,6 @@
 #include <vector>
 #include <optional>
 
-struct QueueFamilyIndices{
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete(){
-        return graphicsFamily.has_value() && presentFamily.has_value();
-    }
-};
-
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -31,5 +22,24 @@ const std::vector<const char*> validationLayers = {
 #else
     const bool enableValidationLayers = true;
 #endif
+
+struct QueueFamilyIndices{
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
+
+    bool isComplete(){
+        return graphicsFamily.has_value() && presentFamily.has_value();
+    }
+};
+
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+    
+    bool isAdequate(){
+        return !formats.empty() && !presentModes.empty();
+    }
+};
 
 #endif /* Utilities_h */
