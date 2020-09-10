@@ -53,6 +53,7 @@ private:
     void createSwapchain();
     void createImageViews();
     void createGraphicsPipeline();
+    VkShaderModule createShaderModule(const std::vector<char>& code);
     
     // devices
     void selectPhysicalDevice();
