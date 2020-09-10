@@ -52,6 +52,7 @@ private:
     void createLogicalDevice();
     void createSwapchain();
     void createImageViews();
+    void createGraphicsPipeline();
     
     // devices
     void selectPhysicalDevice();

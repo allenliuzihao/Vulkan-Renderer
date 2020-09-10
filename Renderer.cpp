@@ -9,6 +9,7 @@ void Renderer::init(GLFWwindow* window){
         createLogicalDevice();
         createSwapchain();
         createImageViews();
+        createGraphicsPipeline();
     }
     catch (std::exception &err){
         std::cerr << "std::exception: " << err.what() << std::endl;
@@ -198,6 +199,10 @@ void Renderer::createImageViews(){
             throw std::runtime_error("failed to create image views!");
         }
     }
+}
+
+void Renderer::createGraphicsPipeline(){
+    
 }
 
 void Renderer::selectPhysicalDevice(){
