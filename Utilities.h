@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 #include <optional>
+#include <fstream>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -41,5 +43,24 @@ struct SwapChainSupportDetails {
         return !formats.empty() && !presentModes.empty();
     }
 };
+
+static inline std::vector<char> readFile(const std::string & filename){
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    
+    if(!file.is_open()){
+        throw std::runtime_error(std::string("failed to open file: ") + filename + " with error: " +  strerror(errno));
+    }
+    
+    size_t fileSize = (size_t) file.tellg();
+    
+    
+    std::vector<char> buffer(fileSize);
+    
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+    
+    return buffer;
+}
 
 #endif /* Utilities_h */

@@ -202,6 +202,9 @@ void Renderer::createImageViews(){
 }
 
 void Renderer::createGraphicsPipeline(){
+    auto vertShaderCode = readFile("Shaders/shader1_vert.spv");
+    auto fragShaderCode = readFile("Shaders/shader1_frag.spv");
+
     
 }
 
