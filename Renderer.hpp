@@ -47,6 +47,9 @@ private:
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
     
+    // render pass
+    VkRenderPass renderPass;
+    
     // pipeline
     VkPipelineLayout pipelineLayout;
     
@@ -55,6 +58,7 @@ private:
     void createLogicalDevice();
     void createSwapchain();
     void createImageViews();
+    void createRenderPass();
     void createGraphicsPipeline();
     VkShaderModule createShaderModule(const std::vector<char>& code);
     
