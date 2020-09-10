@@ -3,11 +3,10 @@
 
 layout(location = 0) in vec3 fragColor;
 
-// framebuffer with index 0 is written to with the outcolor
-// the first framebuffer
-// in stereographic applications, multiple output ports can be
-// specified for each image view as separate framebuffers
-// so fragment shader can output to two frames at a time.
+// this shader runs in a subpass of a render pass
+// subpass might have multiple references to render pass attachments
+// the location = i here means fragment shader would output color
+// to subpass's ith reference to render pass's color attachments.
 layout(location = 0) out vec4 outColor;
 
 void main(){
