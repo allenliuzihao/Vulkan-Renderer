@@ -27,7 +27,10 @@ public:
     void cleanUp();
     void draw();
 
-private:    
+private:
+    // window
+    GLFWwindow* wd;
+    
     // vulkan instance
     VkInstance instance;
     
@@ -72,7 +75,7 @@ private:
     // helper functions
     // creators
     void createInstance();
-    void createSurface(GLFWwindow* window);
+    void createSurface();
     void createLogicalDevice();
     void createSwapchain();
     void createImageViews();
@@ -84,6 +87,10 @@ private:
     void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
+    // swapchain recreation:
+    void recreateSwapchain();
+    void cleanUpSwapchain();
+    
     // devices
     void selectPhysicalDevice();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);

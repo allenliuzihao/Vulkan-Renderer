@@ -1,10 +1,12 @@
 #include "Renderer.hpp"
 
 void Renderer::init(GLFWwindow* window){
+    wd = window;
+
     try {
         createInstance();
         setUpDebugMessenger();
-        createSurface(window);
+        createSurface();
         selectPhysicalDevice();
         createLogicalDevice();
         createSwapchain();
@@ -71,6 +73,25 @@ void Renderer::draw(){
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::cleanUpSwapchain(){
+    for (size_t i = 0; i < swapchainFramebuffers.size(); i++) {
+        vkDestroyFramebuffer(device, swapchainFramebuffers[i], nullptr);
+    }
+
+    // free up existing command buffers => need to reallocate
+    vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device, renderPass, nullptr);
+
+    for (size_t i = 0; i < swapchainImageViews.size(); i++) {
+        vkDestroyImageView(device, swapchainImageViews[i], nullptr);
+    }
+
+    vkDestroySwapchainKHR(device, swapchain, nullptr);
+}
+
 void Renderer::cleanUp(){
     vkDeviceWaitIdle(device);
         
@@ -80,17 +101,10 @@ void Renderer::cleanUp(){
         vkDestroyFence(device, inFlightFences[i], nullptr);
     }
     
+    cleanUpSwapchain();
+    
     vkDestroyCommandPool(device, commandPool, nullptr);
-    for (auto framebuffer : swapchainFramebuffers) {
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-    }
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device, renderPass, nullptr);
-    for(auto &imageView : swapchainImageViews){
-        vkDestroyImageView(device, imageView, nullptr);
-    }
-    vkDestroySwapchainKHR(device, swapchain, nullptr);
+
     vkDestroyDevice(device, nullptr);
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -98,7 +112,6 @@ void Renderer::cleanUp(){
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyInstance(instance, nullptr);
 }
-
 
 void Renderer::createInstance(){
     VkApplicationInfo appInfo {};
@@ -143,8 +156,8 @@ void Renderer::createInstance(){
     }
 }
 
-void Renderer::createSurface(GLFWwindow* window){
-    if(glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
+void Renderer::createSurface(){
+    if(glfwCreateWindowSurface(instance, wd, nullptr, &surface) != VK_SUCCESS){
         throw std::runtime_error("failed to create window surface.");
     }
 }
@@ -187,6 +200,19 @@ void Renderer::createLogicalDevice(){
     
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+}
+
+void Renderer::recreateSwapchain(){
+    vkDeviceWaitIdle(device);
+    
+    cleanUpSwapchain();
+    
+    createSwapchain();
+    createImageViews();
+    createRenderPass();
+    createGraphicsPipeline();
+    createFramebuffers();
+    createCommandBuffers();
 }
 
 void Renderer::createSwapchain(){
@@ -678,7 +704,13 @@ VkExtent2D Renderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabiliti
     if(capabilities.currentExtent.width != UINT32_MAX){
         return capabilities.currentExtent;
     } else {
-        VkExtent2D requiredExtent = { WIDTH, HEIGHT };
+        int width, height;
+        glfwGetFramebufferSize(wd, &width, &height);
+        VkExtent2D requiredExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+        
         requiredExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, requiredExtent.width));
         requiredExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, requiredExtent.height));
         return requiredExtent;
