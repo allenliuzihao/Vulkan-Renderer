@@ -44,6 +44,8 @@ private:
     VkSwapchainKHR swapchain;
     std::vector<VkImage> swapchainImages;
     std::vector<VkImageView> swapchainImageViews;
+    std::vector<VkFramebuffer> swapchainFramebuffers;
+    
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
     
@@ -61,6 +63,7 @@ private:
     void createImageViews();
     void createRenderPass();
     void createGraphicsPipeline();
+    void createFramebuffers();
     VkShaderModule createShaderModule(const std::vector<char>& code);
     
     // devices
