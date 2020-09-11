@@ -33,6 +33,11 @@ void Renderer::draw(){
     uint32_t imageIndex;
     vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
     
+    if(imagesInFlight[imageIndex] != VK_NULL_HANDLE){
+        vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+    }
+    imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     std::vector<VkPipelineStageFlags> waitStages = {
@@ -46,6 +51,7 @@ void Renderer::draw(){
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &renderFinishedSemaphores[currentFrame];
     
+    vkResetFences(device, 1, &inFlightFences[currentFrame]);
     if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
@@ -58,14 +64,16 @@ void Renderer::draw(){
     presentInfo.pSwapchains = &swapchain;
     presentInfo.pImageIndices = &imageIndex;
     
-    vkQueuePresentKHR(presentQueue, &presentInfo);
+    if(vkQueuePresentKHR(presentQueue, &presentInfo) != VK_SUCCESS){
+        throw std::runtime_error("failed to present image.");
+    }
     
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Renderer::cleanUp(){
     vkDeviceWaitIdle(device);
-    
+        
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -483,7 +491,6 @@ void Renderer::createCommandBuffers(){
     for (size_t i = 0; i < commandBuffers.size(); i++) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
         if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");
@@ -519,7 +526,8 @@ void Renderer::createSynchronizations(){
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    
+    imagesInFlight.resize(swapchainImages.size(), VK_NULL_HANDLE);
+
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     
