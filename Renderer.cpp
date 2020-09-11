@@ -226,7 +226,6 @@ void Renderer::createSwapchain(){
     }
     
     vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr);
-    std::cout << "number of swapchain images: " << imageCount << std::endl;
     swapchainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(device, swapchain, &imageCount, swapchainImages.data());
 
