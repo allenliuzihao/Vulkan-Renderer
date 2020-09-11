@@ -63,8 +63,10 @@ private:
     std::vector<VkCommandBuffer> commandBuffers;
     
     // synchronizations
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
+    size_t currentFrame = 0;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
     
     // helper functions
     // creators
@@ -78,7 +80,7 @@ private:
     void createFramebuffers();
     void createCommandPool();
     void createCommandBuffers();
-    void createSemaphores();
+    void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // devices
