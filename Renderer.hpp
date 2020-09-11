@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <optional>
+#include <array>
 #include <unordered_set>
 
 #include "Utilities.h"
@@ -61,6 +62,10 @@ private:
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     
+    // synchronizations
+    VkSemaphore imageAvailableSemaphore;
+    VkSemaphore renderFinishedSemaphore;
+    
     // helper functions
     // creators
     void createInstance();
@@ -73,6 +78,7 @@ private:
     void createFramebuffers();
     void createCommandPool();
     void createCommandBuffers();
+    void createSemaphores();
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // devices
