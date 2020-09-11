@@ -25,6 +25,10 @@ void Renderer::init(GLFWwindow* window){
     }
 }
 
+void Renderer::draw(){
+    
+}
+
 void Renderer::cleanUp(){
     vkDestroyCommandPool(device, commandPool, nullptr);
     for (auto framebuffer : swapchainFramebuffers) {

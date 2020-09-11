@@ -24,6 +24,7 @@ class Renderer{
 public:
     void init(GLFWwindow* window);
     void cleanUp();
+    void draw();
 
 private:    
     // vulkan instance
@@ -60,6 +61,8 @@ private:
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     
+    // helper functions
+    // creators
     void createInstance();
     void createSurface(GLFWwindow* window);
     void createLogicalDevice();

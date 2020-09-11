@@ -30,7 +30,8 @@ int main() {
     renderer.init(window);
     
     while(!glfwWindowShouldClose(window)) {
-     glfwPollEvents();
+        glfwPollEvents();
+        renderer.draw();
     }
 
     glfwDestroyWindow(window);
