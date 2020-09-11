@@ -56,6 +56,10 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     
+    // commands
+    VkCommandPool commandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+    
     void createInstance();
     void createSurface(GLFWwindow* window);
     void createLogicalDevice();
@@ -64,8 +68,10 @@ private:
     void createRenderPass();
     void createGraphicsPipeline();
     void createFramebuffers();
+    void createCommandPool();
+    void createCommandBuffers();
     VkShaderModule createShaderModule(const std::vector<char>& code);
-    
+
     // devices
     void selectPhysicalDevice();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
