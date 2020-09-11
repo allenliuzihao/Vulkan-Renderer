@@ -52,6 +52,7 @@ private:
     
     // pipeline
     VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
     
     void createInstance();
     void createSurface(GLFWwindow* window);
