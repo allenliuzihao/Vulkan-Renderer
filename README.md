@@ -9,6 +9,8 @@ Getting this triangle on screen involves several concepts in Vulkan, including s
 
 ### Resizable Triangle
 
+Baremetal swapchain resize by detecting window changes and then recreate swapchain with new extent.
+
 ![small](triangle_resize_small.png)
 ![large](triangle_resize_large.png)
 
