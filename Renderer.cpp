@@ -30,10 +30,17 @@ void Renderer::init(GLFWwindow* window){
 
 void Renderer::draw(){
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &inFlightFences[currentFrame]);
     
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    
+    // driver not guaranteed to output error out of data for surface
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+        recreateSwapchain();
+        return;
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to acquire swap chain image.");
+    }
     
     if(imagesInFlight[imageIndex] != VK_NULL_HANDLE){
         vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -66,11 +73,21 @@ void Renderer::draw(){
     presentInfo.pSwapchains = &swapchain;
     presentInfo.pImageIndices = &imageIndex;
     
-    if(vkQueuePresentKHR(presentQueue, &presentInfo) != VK_SUCCESS){
-        throw std::runtime_error("failed to present image.");
+    result = vkQueuePresentKHR(presentQueue, &presentInfo);
+    
+    // driver not guaranteed to output error out of data for surface
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        recreateSwapchain();
+        framebufferResized = false;
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image.");
     }
     
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Renderer::setFramebufferResized(bool resized){
+    framebufferResized = resized;
 }
 
 void Renderer::cleanUpSwapchain(){
@@ -203,6 +220,13 @@ void Renderer::createLogicalDevice(){
 }
 
 void Renderer::recreateSwapchain(){
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(wd, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(wd, &width, &height);
+        glfwWaitEvents();
+    }
+    
     vkDeviceWaitIdle(device);
     
     cleanUpSwapchain();

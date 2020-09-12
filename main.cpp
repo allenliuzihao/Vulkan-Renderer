@@ -18,19 +18,27 @@
 
 Renderer renderer;
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+    app->setFramebufferResized(true);
+}
+
 int main() {
     
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     
     renderer.init(window);
     
+    glfwSetWindowUserPointer(window, &renderer);
+    
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+
         renderer.draw();
     }
 

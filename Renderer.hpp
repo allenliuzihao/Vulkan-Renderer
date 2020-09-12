@@ -26,11 +26,14 @@ public:
     void init(GLFWwindow* window);
     void cleanUp();
     void draw();
-
+    void setFramebufferResized(bool resized);
+    
 private:
+    
     // window
     GLFWwindow* wd;
-    
+    bool framebufferResized = false;
+
     // vulkan instance
     VkInstance instance;
     
