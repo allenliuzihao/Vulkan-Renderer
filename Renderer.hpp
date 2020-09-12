@@ -76,6 +76,10 @@ private:
     std::vector<VkFence> inFlightFences;
     std::vector<VkFence> imagesInFlight;
     
+    // buffers
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    
     // helper functions
     // creators
     void createInstance();
@@ -87,6 +91,7 @@ private:
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
+    void createVertexBuffer();
     void createCommandBuffers();
     void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);
