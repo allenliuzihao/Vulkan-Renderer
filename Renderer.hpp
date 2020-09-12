@@ -10,6 +10,8 @@
 #include <GLFW/glfw3.h>
 #pragma clang diagnostic pop
 
+#include <glm/glm.hpp>
+
 #include <cstdlib>
 #include <cstdint> // Necessary for UINT32_MAX
 #include <iostream>
@@ -28,8 +30,7 @@ public:
     void draw();
     void setFramebufferResized(bool resized);
     
-private:
-    
+private:    
     // window
     GLFWwindow* wd;
     bool framebufferResized = false;
