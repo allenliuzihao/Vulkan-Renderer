@@ -74,11 +74,12 @@ void Renderer::draw(){
     presentInfo.pImageIndices = &imageIndex;
     
     result = vkQueuePresentKHR(presentQueue, &presentInfo);
-    
+
     // driver not guaranteed to output error out of data for surface
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
         recreateSwapchain();
         framebufferResized = false;
+        return;
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image.");
     }
