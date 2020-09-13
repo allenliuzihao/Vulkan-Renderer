@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 #include <array>
+#include <unordered_set>
 #include <optional>
 #include <fstream>
 
@@ -33,9 +34,24 @@ const std::vector<const char*> validationLayers = {
 struct QueueFamilyIndices{
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
-
+    std::optional<uint32_t> transferFamily;
+    
     bool isComplete(){
-        return graphicsFamily.has_value() && presentFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
+    }
+    
+    std::unordered_set<uint32_t> toSet(){
+        std::unordered_set<uint32_t> result;
+        if(graphicsFamily.has_value()){
+            result.insert(graphicsFamily.value());
+        }
+        if(transferFamily.has_value()){
+            result.insert(transferFamily.value());
+        }
+        if(presentFamily.has_value()){
+            result.insert(presentFamily.value());
+        }
+        return result;
     }
 };
 
@@ -113,6 +129,47 @@ static inline uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t 
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+}
+
+static inline void createBuffer(VkDevice device,
+                                VkPhysicalDevice physicalDevice,
+                                QueueFamilyIndices& indices,
+                                VkDeviceSize size,
+                                VkBufferUsageFlags usage,
+                                VkMemoryPropertyFlags properties,
+                                VkBuffer& buffer, VkDeviceMemory& bufferMemory){
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    
+    std::unordered_set<uint32_t> indicesSet = indices.toSet();
+    
+    if (indicesSet.size() > 1) {
+        std::vector<uint32_t> indicesVec(indicesSet.size());
+        std::copy(indicesSet.begin(), indicesSet.end(), indicesVec.begin());
+        bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+        bufferInfo.pQueueFamilyIndices = indicesVec.data();
+    } else {
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create vertex buffer.");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate vertex buffer memory.");
+    }
+    
+    vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
 #endif /* Utilities_h */

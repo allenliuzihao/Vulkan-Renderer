@@ -45,6 +45,7 @@ private:
     // vulkan queues
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+    VkQueue transferQueue;
     
     // surface
     VkSurfaceKHR surface;
@@ -66,7 +67,8 @@ private:
     VkPipeline graphicsPipeline;
     
     // commands
-    VkCommandPool commandPool;
+    VkCommandPool graphicsCommandPool;
+    VkCommandPool transferCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     
     // synchronizations
