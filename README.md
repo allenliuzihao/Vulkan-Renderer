@@ -14,3 +14,6 @@ Baremetal swapchain resize by detecting window changes and then recreate swapcha
 ![small](triangle_resize_small.png)
 ![large](triangle_resize_large.png)
 
+### Index Buffer Draw
+
+![rectangle](rectangle.png)
