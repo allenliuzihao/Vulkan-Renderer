@@ -539,7 +539,7 @@ void Renderer::createCommandPool(){
     VkCommandPoolCreateInfo transferPoolInfo{};
     transferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     transferPoolInfo.queueFamilyIndex = queueFamilyIndices.transferFamily.value();
-    transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
     
     if (vkCreateCommandPool(device, &transferPoolInfo, nullptr, &transferCommandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
@@ -549,21 +549,41 @@ void Renderer::createCommandPool(){
 
 void Renderer::createVertexBuffer(){
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-    indices.presentFamily = {};
     
     VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
+    
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    QueueFamilyIndices ids1 = { {}, {}, indices.transferFamily };
     createBuffer(device,
                  physicalDevice,
-                 indices,
+                 ids1,
                  bufferSize,
-                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 vertexBuffer, vertexBufferMemory);
+                 stagingBuffer, stagingBufferMemory);
     
     void* data;
-    vkMapMemory(device, vertexBufferMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(device, vertexBufferMemory);
+    vkUnmapMemory(device, stagingBufferMemory);
+    
+    QueueFamilyIndices ids2 = { indices.graphicsFamily, {}, indices.transferFamily };
+    createBuffer(device,
+                 physicalDevice,
+                 ids2,
+                 bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+    
+    copyBuffer(device,
+               transferCommandPool,
+               transferQueue,
+               stagingBuffer,
+               vertexBuffer,
+               bufferSize);
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
 
