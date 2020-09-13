@@ -3,7 +3,7 @@ Vulkan project from the tutorial at: https://vulkan-tutorial.com/, with some exp
 
 ## Triangle
 
-Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores.
+Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers.
 
 ![Triangle](triangle.png)
 
