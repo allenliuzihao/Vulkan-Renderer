@@ -5,8 +5,6 @@ Vulkan project from the tutorial at: https://vulkan-tutorial.com/, with some exp
 
 Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers.
 
-![Triangle](triangle.png)
-
 ### Resizable Triangle
 
 Baremetal swapchain resize by detecting window changes and then recreate swapchain with new extent.
