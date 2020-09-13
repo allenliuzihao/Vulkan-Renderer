@@ -186,10 +186,8 @@ void Renderer::createSurface(){
 }
 
 void Renderer::createLogicalDevice(){
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-    
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::unordered_set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+    std::unordered_set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
     float queuePriority = 1.0f;
     
     for(uint32_t queueFamily : uniqueQueueFamilies){
@@ -221,9 +219,9 @@ void Renderer::createLogicalDevice(){
         throw std::runtime_error("failed to create logical device!");
     }
     
-    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
-    vkGetDeviceQueue(device, indices.transferFamily.value(), 0, &transferQueue);
+    vkGetDeviceQueue(device, queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
+    vkGetDeviceQueue(device, queueFamilyIndices.presentFamily.value(), 0, &presentQueue);
+    vkGetDeviceQueue(device, queueFamilyIndices.transferFamily.value(), 0, &transferQueue);
 }
 
 void Renderer::recreateSwapchain(){
@@ -268,17 +266,13 @@ void Renderer::createSwapchain(){
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
-
-    if (indices.graphicsFamily != indices.presentFamily) {
+    std::vector<uint32_t> queueFamilyIndicesArr = {queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value()};
+    if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndicesArr.size());
+        createInfo.pQueueFamilyIndices = queueFamilyIndicesArr.data();
     } else {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        createInfo.queueFamilyIndexCount = 0; // Optional
-        createInfo.pQueueFamilyIndices = nullptr; // Optional
     }
     createInfo.preTransform = swapchainSupport.capabilities.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -525,8 +519,6 @@ void Renderer::createFramebuffers() {
 }
 
 void Renderer::createCommandPool(){
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
-    
     VkCommandPoolCreateInfo graphicsPoolInfo{};
     graphicsPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     graphicsPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
@@ -548,13 +540,11 @@ void Renderer::createCommandPool(){
 }
 
 void Renderer::createVertexBuffer(){
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-    
     VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
     
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    QueueFamilyIndices ids1 = { {}, {}, indices.transferFamily };
+    QueueFamilyIndices ids1 = { {}, {}, queueFamilyIndices.transferFamily };
     createBuffer(device,
                  physicalDevice,
                  ids1,
@@ -568,7 +558,7 @@ void Renderer::createVertexBuffer(){
     memcpy(data, vertices.data(), (size_t) bufferSize);
     vkUnmapMemory(device, stagingBufferMemory);
     
-    QueueFamilyIndices ids2 = { indices.graphicsFamily, {}, indices.transferFamily };
+    QueueFamilyIndices ids2 = { queueFamilyIndices.graphicsFamily, {}, queueFamilyIndices.transferFamily };
     createBuffer(device,
                  physicalDevice,
                  ids2,
@@ -586,6 +576,12 @@ void Renderer::createVertexBuffer(){
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
+void Renderer::createIndexBuffer(){
+    //VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    
+    
+    
+}
 
 void Renderer::createCommandBuffers(){
     commandBuffers.resize(swapchainFramebuffers.size());
@@ -696,7 +692,7 @@ void Renderer::selectPhysicalDevice(){
 }
 
 QueueFamilyIndices Renderer::findQueueFamilies(VkPhysicalDevice device){
-    QueueFamilyIndices indices;
+    QueueFamilyIndices currQueueFamilyIndices{};
     
     uint32_t queueFamiliyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamiliyCount, nullptr);
@@ -710,26 +706,26 @@ QueueFamilyIndices Renderer::findQueueFamilies(VkPhysicalDevice device){
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
         
         if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
-            indices.graphicsFamily = i;
+            currQueueFamilyIndices.graphicsFamily = i;
         }
         if(queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT){
-            indices.transferFamily = i;
+            currQueueFamilyIndices.transferFamily = i;
         }
         if(presentSupport){
-            indices.presentFamily = i;
+            currQueueFamilyIndices.presentFamily = i;
         }
 
-        if(indices.isComplete()){
+        if(currQueueFamilyIndices.isComplete()){
             break;
         }
         i++;
     }
     
-    return indices;
+    return currQueueFamilyIndices;
 }
 
 bool Renderer::isDeviceSuitable(VkPhysicalDevice device){
-    QueueFamilyIndices indices = findQueueFamilies(device);
+    queueFamilyIndices = findQueueFamilies(device);
     
     bool extensionSupported = checkDeviceExtensionSupport(device);
     
@@ -739,7 +735,7 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device){
         swapchainAdequate = swapchainSupport.isAdequate();
     }
     
-    return extensionSupported && swapchainAdequate && indices.isComplete();
+    return extensionSupported && swapchainAdequate && queueFamilyIndices.isComplete();
 }
 
 std::vector<const char*> Renderer::getRequiredExtensions(){

@@ -46,6 +46,7 @@ private:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkQueue transferQueue;
+    QueueFamilyIndices queueFamilyIndices;
     
     // surface
     VkSurfaceKHR surface;
@@ -81,6 +82,8 @@ private:
     // buffers
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
     
     // helper functions
     // creators
@@ -94,6 +97,7 @@ private:
     void createFramebuffers();
     void createCommandPool();
     void createVertexBuffer();
+    void createIndexBuffer();
     void createCommandBuffers();
     void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);
