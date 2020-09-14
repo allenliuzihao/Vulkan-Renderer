@@ -95,7 +95,7 @@ private:
     
     // descriptors
     VkDescriptorPool descriptorPool;
-    
+    std::vector<VkDescriptorSet> descriptorSets;
     
     // helper functions
     // creators
@@ -113,6 +113,7 @@ private:
     void createIndexBuffer();
     void createUniformBuffers();
     void createDescriptorPool();
+    void createDescriptorSets();
     void createCommandBuffers();
     void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);

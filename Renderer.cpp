@@ -20,6 +20,7 @@ void Renderer::init(GLFWwindow* window){
         createIndexBuffer();
         createUniformBuffers();
         createDescriptorPool();
+        createDescriptorSets();
         createCommandBuffers();
         createSynchronizations();
     }
@@ -275,6 +276,7 @@ void Renderer::recreateSwapchain(){
     createFramebuffers();
     createUniformBuffers();
     createDescriptorPool();
+    createDescriptorSets();
     createCommandBuffers();
 }
 
@@ -698,6 +700,39 @@ void Renderer::createDescriptorPool(){
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool.");
+    }
+}
+
+void Renderer::createDescriptorSets(){
+    std::vector<VkDescriptorSetLayout> layouts(swapchainImages.size(), descriptorSetLayout);
+    
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(swapchainImages.size());
+    allocInfo.pSetLayouts = layouts.data();
+    
+    descriptorSets.resize(swapchainImages.size());
+    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate descriptor sets.");
+    }
+    
+    for (size_t i = 0; i < swapchainImages.size(); i++) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+        
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSets[i];
+        descriptorWrite.dstBinding = 0;            // binding ties to the descriptor set
+        descriptorWrite.dstArrayElement = 0;       // each descriptor set have multiple descriptors, starting index of descriptor set array
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;       // number of descriptors for the update
+        descriptorWrite.pBufferInfo = &bufferInfo;
+        
+        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
     }
 }
 
