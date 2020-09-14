@@ -18,6 +18,7 @@ void Renderer::init(GLFWwindow* window){
         createCommandPool();
         createVertexBuffer();
         createIndexBuffer();
+        createUniformBuffers();
         createCommandBuffers();
         createSynchronizations();
     }
@@ -107,6 +108,8 @@ void Renderer::cleanUpSwapchain(){
     vkDestroyRenderPass(device, renderPass, nullptr);
 
     for (size_t i = 0; i < swapchainImageViews.size(); i++) {
+        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+        vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
         vkDestroyImageView(device, swapchainImageViews[i], nullptr);
     }
 
@@ -248,6 +251,7 @@ void Renderer::recreateSwapchain(){
     createRenderPass();
     createGraphicsPipeline();
     createFramebuffers();
+    createUniformBuffers();
     createCommandBuffers();
 }
 
@@ -637,6 +641,25 @@ void Renderer::createIndexBuffer(){
                bufferSize);
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
+}
+
+void Renderer::createUniformBuffers(){
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+    uniformBuffers.resize(swapchainImages.size());
+    uniformBuffersMemory.resize(swapchainImages.size());
+    
+    QueueFamilyIndices ids = { queueFamilyIndices.graphicsFamily, {}, {} };
+
+    for (size_t i = 0; i < swapchainImages.size(); i++) {
+        createBuffer(device,
+                     physicalDevice,
+                     ids,
+                     bufferSize,
+                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     uniformBuffers[i], uniformBuffersMemory[i]);
+    }
 }
 
 void Renderer::createCommandBuffers(){
