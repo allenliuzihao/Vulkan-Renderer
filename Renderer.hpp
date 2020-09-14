@@ -10,8 +10,11 @@
 #include <GLFW/glfw3.h>
 #pragma clang diagnostic pop
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <cstdint> // Necessary for UINT32_MAX
 #include <iostream>
@@ -111,6 +114,9 @@ private:
     // swapchain recreation:
     void recreateSwapchain();
     void cleanUpSwapchain();
+    
+    // uniform buffer
+    void updateUniformBuffer(uint32_t currentImage);
     
     // devices
     void selectPhysicalDevice();
