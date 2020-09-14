@@ -88,9 +88,14 @@ private:
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+    
     // UBO
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
+    
+    // descriptors
+    VkDescriptorPool descriptorPool;
+    
     
     // helper functions
     // creators
@@ -107,6 +112,7 @@ private:
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
+    void createDescriptorPool();
     void createCommandBuffers();
     void createSynchronizations();
     VkShaderModule createShaderModule(const std::vector<char>& code);
