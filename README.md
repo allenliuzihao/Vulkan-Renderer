@@ -9,18 +9,18 @@ Getting this triangle on screen involves several concepts in Vulkan, including s
 
 Baremetal swapchain resize by detecting window changes and then recreate swapchain with new extent.
 
-![small](triangle_resize_small.png)
-![large](triangle_resize_large.png)
+![small](images/triangle_resize_small.png)
+![large](images/triangle_resize_large.png)
 
 
 ### Index Buffer Draw
 
-![rectangle](rectangle.png)
+![rectangle](images/rectangle.png)
 
 
 ### Descriptor Sets and Push Constants
 
 For this milestone I added descriptor sets support for view and projection matrices, and push constant for model update so that the rectangle can spin around. 
 
-![descriptor_set_push_constant_1](descriptor_set_push_constant_1.png)
-![descriptor_set_push_constant_2](descriptor_set_push_constant_2.png)
+![descriptor_set_push_constant_1](images/descriptor_set_push_constant_1.png)
+![descriptor_set_push_constant_2](images/descriptor_set_push_constant_2.png)

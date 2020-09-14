@@ -14,6 +14,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "stb_image.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <cstdint> // Necessary for UINT32_MAX
@@ -118,6 +120,7 @@ private:
     void createDescriptorSets();
     void createCommandBuffers();
     void createSynchronizations();
+    void createTextureImage();
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // swapchain recreation:

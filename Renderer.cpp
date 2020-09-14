@@ -17,6 +17,7 @@ void Renderer::init(GLFWwindow* window){
         createGraphicsPipeline();
         createFramebuffers();
         createCommandPool();
+        createTextureImage();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -839,6 +840,10 @@ void Renderer::createSynchronizations(){
             throw std::runtime_error("failed to create synchronizations object for a frame.");
         }
     }
+}
+
+void Renderer::createTextureImage(){
+    
 }
 
 VkShaderModule Renderer::createShaderModule(const std::vector<char>& code){
