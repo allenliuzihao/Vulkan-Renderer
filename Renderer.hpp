@@ -14,8 +14,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "stb_image.h"
-
 #include <chrono>
 #include <cstdlib>
 #include <cstdint> // Necessary for UINT32_MAX
@@ -25,6 +23,9 @@
 #include <optional>
 #include <array>
 #include <unordered_set>
+
+
+#include "stb_image.h"
 
 #include "Utilities.h"
 
@@ -90,6 +91,10 @@ private:
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+    
+    // images and textures
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
     
     // UBO
     std::vector<VkBuffer> uniformBuffers;
