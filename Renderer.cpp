@@ -775,7 +775,8 @@ void Renderer::createCommandBuffers(){
 void Renderer::recordCommands(uint32_t currentImage){
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    
     if (vkBeginCommandBuffer(commandBuffers[currentImage], &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
