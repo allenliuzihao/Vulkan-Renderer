@@ -31,10 +31,13 @@ const std::vector<const char*> validationLayers = {
     const bool enableValidationLayers = true;
 #endif
 
+struct PushConstantModel{
+    alignas(16) glm::mat4 model;    // alignment of offset at 16 bytes (offset % 16 == 0), required by the shader to read
+};
+
 struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
+    alignas(16) glm::mat4 view;     // alignment of offset at 16 bytes
+    alignas(16) glm::mat4 proj;     // alignment of offset at 16 bytes
 };
 
 struct QueueFamilyIndices{

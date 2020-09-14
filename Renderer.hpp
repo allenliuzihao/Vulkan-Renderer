@@ -93,9 +93,10 @@ private:
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     
-    // descriptors
+    // descriptors and push constants
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
+    VkPushConstantRange pushConstantRange;
     
     // helper functions
     // creators
@@ -106,6 +107,7 @@ private:
     void createImageViews();
     void createRenderPass();
     void createDescriptorSetLayout();
+    void createPushConstantRange();
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
@@ -123,7 +125,10 @@ private:
     void cleanUpSwapchain();
     
     // uniform buffer
-    void updateUniformBuffer(uint32_t currentImage);
+    void updateUniformBuffers();
+    
+    // record commands
+    void recordCommands(uint32_t currentImage);
     
     // devices
     void selectPhysicalDevice();
@@ -133,7 +138,8 @@ private:
     // getters
     std::vector<const char*> getRequiredExtensions();
     SwapChainSupportDetails querySwapchainSupport(VkPhysicalDevice);
-    
+    PushConstantModel getModelUpdate();
+
     // chooser
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
