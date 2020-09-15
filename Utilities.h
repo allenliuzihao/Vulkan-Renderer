@@ -308,10 +308,11 @@ static inline void transitionImageLayout(VkCommandBuffer commandBuffer,
     VkPipelineStageFlags destinationStage;
 
     if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL){
-        barrier.srcAccessMask = 0;
+        barrier.srcAccessMask = 0;                              // implicit HOST_ACCESS_WRITE_BIT when this equals 0
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;        // wait until command buffer from host finishes execution (or create image);
+                                                                // then layout transition can occur
         destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL){
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
