@@ -3,7 +3,7 @@ Vulkan project from the tutorial at: https://vulkan-tutorial.com/, with some exp
 
 ## Triangle
 
-Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers, push constants and descriptor sets.
+Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers, push constants and descriptor sets, and texture mapping.
 
 ### Resizable Window
 
