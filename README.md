@@ -32,3 +32,4 @@ I added functionaltiy to: 1) load images from CPU buffer to GPU texture memory w
 
 ![texture1](images/texture1.png)
 ![texture2](images/texture2.png)
+![texture3](images/texture3.png)
