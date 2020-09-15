@@ -20,6 +20,7 @@ void Renderer::init(GLFWwindow* window){
         createFramebuffers();
         createCommandPool();
         createTextureImage();
+        createTextureImageView();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -156,6 +157,8 @@ void Renderer::cleanUpSwapchain(){
 void Renderer::cleanUp(){
     vkDeviceWaitIdle(device);
             
+    vkDestroyImageView(device, textureImageView, nullptr);
+    
     vkDestroyImage(device, textureImage, nullptr);
     vkFreeMemory(device, textureImageMemory, nullptr);
     
@@ -346,28 +349,35 @@ void Renderer::createSwapchain(){
     swapchainExtent = extent;
 }
 
+VkImageView Renderer::createImageView(VkImage image, VkFormat format){
+    VkImageViewCreateInfo imageViewCreateInfo {};
+    imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    imageViewCreateInfo.image = image;
+    imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    imageViewCreateInfo.format = format;
+    imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+    imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+    imageViewCreateInfo.subresourceRange.levelCount = 1;
+    imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;                    // if rendering VR, 2 image view need to be created for each
+    imageViewCreateInfo.subresourceRange.layerCount = 1;                        // swapchain image, representing left and right image view.
+    
+    VkImageView imageView;
+    if (vkCreateImageView(device, &imageViewCreateInfo, nullptr, &imageView) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create image views!");
+    }
+    
+    return imageView;
+}
+
 void Renderer::createImageViews(){
     swapchainImageViews.resize(swapchainImages.size());
     
     for(size_t i = 0; i < swapchainImages.size(); ++i){
-        VkImageViewCreateInfo imageViewCreateInfo {};
-        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        imageViewCreateInfo.image = swapchainImages[i];
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        imageViewCreateInfo.format = swapchainImageFormat;
-        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        imageViewCreateInfo.subresourceRange.levelCount = 1;
-        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;                    // if rendering VR, 2 image view need to be created for each
-        imageViewCreateInfo.subresourceRange.layerCount = 1;                        // swapchain image, representing left and right image view.
-        
-        if (vkCreateImageView(device, &imageViewCreateInfo, nullptr, &swapchainImageViews[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create image views!");
-        }
+        swapchainImageViews[i] = createImageView(swapchainImages[i], swapchainImageFormat);
     }
 }
 
@@ -909,6 +919,10 @@ void Renderer::createTextureImage(){
     
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
+}
+
+void Renderer::createTextureImageView(){
+    textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 VkShaderModule Renderer::createShaderModule(const std::vector<char>& code){

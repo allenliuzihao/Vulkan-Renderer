@@ -95,6 +95,7 @@ private:
     // images and textures
     VkImage textureImage;
     VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
     
     // UBO
     std::vector<VkBuffer> uniformBuffers;
@@ -126,6 +127,8 @@ private:
     void createCommandBuffers();
     void createSynchronizations();
     void createTextureImage();
+    void createTextureImageView();
+    VkImageView createImageView(VkImage image, VkFormat format);
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // swapchain recreation:
