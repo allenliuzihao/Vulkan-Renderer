@@ -156,6 +156,9 @@ void Renderer::cleanUpSwapchain(){
 void Renderer::cleanUp(){
     vkDeviceWaitIdle(device);
             
+    vkDestroyImage(device, textureImage, nullptr);
+    vkFreeMemory(device, textureImageMemory, nullptr);
+    
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -388,11 +391,13 @@ void Renderer::createRenderPass(){
     subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;                             // outside of render pass
     subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // pipeline stage
     subpassDependencies[0].srcAccessMask = 0;
-    
+    subpassDependencies[0].dependencyFlags = 0;
+
     // from undefined to color attachment optimal
     subpassDependencies[0].dstSubpass = 0;
     subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -642,12 +647,10 @@ void Renderer::createVertexBuffer(){
                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
     
-    copyBuffer(device,
-               transferCommandPool,
-               transferQueue,
-               stagingBuffer,
-               vertexBuffer,
-               bufferSize);
+    VkCommandBuffer commandBuffer = setUpCommandBuffer(device, transferCommandPool);
+    copyBuffer(commandBuffer, stagingBuffer, vertexBuffer, bufferSize);
+    flushSetupCommands(device, commandBuffer, transferCommandPool, transferQueue);
+    
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
@@ -679,12 +682,11 @@ void Renderer::createIndexBuffer(){
                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
     
-    copyBuffer(device,
-               transferCommandPool,
-               transferQueue,
-               stagingBuffer,
-               indexBuffer,
-               bufferSize);
+    VkCommandBuffer commandBuffer = setUpCommandBuffer(device, transferCommandPool);
+    copyBuffer(commandBuffer, stagingBuffer, indexBuffer, bufferSize);
+    flushSetupCommands(device, commandBuffer, transferCommandPool, transferQueue);
+    
+    
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
@@ -875,6 +877,7 @@ void Renderer::createTextureImage(){
     stbi_image_free(pixels);
 
     QueueFamilyIndices indices = { queueFamilyIndices.graphicsFamily, {}, queueFamilyIndices.transferFamily };
+    
     createImage(device,
                 physicalDevice,
                 indices,
@@ -884,6 +887,28 @@ void Renderer::createTextureImage(){
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                 textureImage, textureImageMemory);
+
+    VkCommandBuffer commandBuffer = setUpCommandBuffer(device, transferCommandPool);
+    
+    transitionImageLayout(commandBuffer,
+                          textureImage,
+                          VK_FORMAT_R8G8B8A8_SRGB,
+                          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    
+    copyBufferToImage(commandBuffer,
+                      stagingBuffer,
+                      textureImage,
+                      static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    
+    transitionImageLayout(commandBuffer,
+                          textureImage,
+                          VK_FORMAT_R8G8B8A8_SRGB,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    
+    flushSetupCommands(device, commandBuffer, transferCommandPool, transferQueue);
+    
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
 VkShaderModule Renderer::createShaderModule(const std::vector<char>& code){
