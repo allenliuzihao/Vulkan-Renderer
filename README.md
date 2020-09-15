@@ -24,3 +24,11 @@ For this milestone I added descriptor sets support for view and projection matri
 
 ![descriptor_set_push_constant_1](images/descriptor_set_push_constant_1.png)
 ![descriptor_set_push_constant_2](images/descriptor_set_push_constant_2.png)
+
+
+### Texture mapping
+
+I added functionaltiy to: 1) load images from CPU buffer to GPU texture memory while handling image layout transitions, 2) pass texture image as descriptors and descriptor sets to graphics pipeline for shader read, 3) create texture sampler to sample textures from the fragment shader. 
+
+![texture1](images/texture1.png)
+![texture2](images/texture2.png)
