@@ -96,7 +96,8 @@ private:
     VkImage textureImage;
     VkDeviceMemory textureImageMemory;
     VkImageView textureImageView;
-    
+    VkSampler textureSampler;
+
     // UBO
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
@@ -128,6 +129,8 @@ private:
     void createSynchronizations();
     void createTextureImage();
     void createTextureImageView();
+    void createTextureSampler();
+    
     VkImageView createImageView(VkImage image, VkFormat format);
     VkShaderModule createShaderModule(const std::vector<char>& code);
 

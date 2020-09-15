@@ -21,6 +21,7 @@ void Renderer::init(GLFWwindow* window){
         createCommandPool();
         createTextureImage();
         createTextureImageView();
+        createTextureSampler();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -157,6 +158,7 @@ void Renderer::cleanUpSwapchain(){
 void Renderer::cleanUp(){
     vkDeviceWaitIdle(device);
             
+    vkDestroySampler(device, textureSampler, nullptr);
     vkDestroyImageView(device, textureImageView, nullptr);
     
     vkDestroyImage(device, textureImage, nullptr);
@@ -253,6 +255,7 @@ void Renderer::createLogicalDevice(){
     }
     
     VkPhysicalDeviceFeatures deviceFeatures {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
     
     VkDeviceCreateInfo createInfo {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -925,6 +928,33 @@ void Renderer::createTextureImageView(){
     textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
+void Renderer::createTextureSampler(){
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 16.0f;              // 16 texel samples max for a pixel value
+    
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+    
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture sampler.");
+    }
+}
+
 VkShaderModule Renderer::createShaderModule(const std::vector<char>& code){
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -998,13 +1028,16 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device){
     
     bool extensionSupported = checkDeviceExtensionSupport(device);
     
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+    
     bool swapchainAdequate = false;
     if(extensionSupported){
         SwapChainSupportDetails swapchainSupport = querySwapchainSupport(device);
         swapchainAdequate = swapchainSupport.isAdequate();
     }
     
-    return extensionSupported && swapchainAdequate && queueFamilyIndices.isComplete();
+    return supportedFeatures.samplerAnisotropy && extensionSupported && swapchainAdequate && queueFamilyIndices.isComplete();
 }
 
 std::vector<const char*> Renderer::getRequiredExtensions(){
