@@ -156,7 +156,6 @@ private:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
     VkFormat findDepthFormat();
-    bool hasStencilComponent(VkFormat format);
     
     // getters
     std::vector<const char*> getRequiredExtensions();

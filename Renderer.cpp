@@ -657,10 +657,6 @@ VkFormat Renderer::findDepthFormat(){
         );
 }
 
-bool Renderer::hasStencilComponent(VkFormat format){
-    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-}
-
 void Renderer::createDepthBuffers(){
     depthBufferImages.resize(swapchainImages.size());
     depthBufferImagesMemory.resize(swapchainImages.size());
@@ -670,6 +666,7 @@ void Renderer::createDepthBuffers(){
     
     QueueFamilyIndices ids = { queueFamilyIndices.graphicsFamily, {}, {} };
 
+    VkCommandBuffer commandBuffer = setUpCommandBuffer(device, graphicsCommandPool);
     for(size_t i = 0; i < swapchainImages.size(); ++i){
         createImage(device,
                     physicalDevice,
@@ -680,7 +677,13 @@ void Renderer::createDepthBuffers(){
                     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                     depthBufferImages[i], depthBufferImagesMemory[i]);
         depthBufferImageViews[i] = createImageView(depthBufferImages[i], depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    
+        transitionImageLayout(commandBuffer,
+                              depthBufferImages[i],
+                              depthFormat,
+                              VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
+    flushSetupCommands(device, commandBuffer, graphicsCommandPool, graphicsQueue);
 }
 
 void Renderer::createVertexBuffer(){
@@ -748,7 +751,6 @@ void Renderer::createIndexBuffer(){
     VkCommandBuffer commandBuffer = setUpCommandBuffer(device, transferCommandPool);
     copyBuffer(commandBuffer, stagingBuffer, indexBuffer, bufferSize);
     flushSetupCommands(device, commandBuffer, transferCommandPool, transferQueue);
-    
     
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
