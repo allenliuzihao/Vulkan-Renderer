@@ -561,11 +561,16 @@ void Renderer::createGraphicsPipeline(){
     
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_FALSE;                                       // one fragment one sample
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;                         // one pixel one sample so which ever fragment is in front has the pixel
+    multisampling.sampleShadingEnable = VK_FALSE;                            // one fragment one sample
+    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;              // one pixel one sample so which ever fragment is in front has the pixel
     
-    // TODO: depth testing
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
     
     // color blending for one (per-attached) framebuffer
     // alpha blending for the framebuffer
@@ -606,9 +611,8 @@ void Renderer::createGraphicsPipeline(){
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
+    pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.pDynamicState = nullptr; // Optional
     pipelineInfo.layout = pipelineLayout;
     pipelineInfo.renderPass = renderPass;
     pipelineInfo.subpass = 0;

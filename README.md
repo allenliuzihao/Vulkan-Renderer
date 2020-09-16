@@ -33,3 +33,11 @@ I added functionaltiy to: 1) load images from CPU buffer to GPU texture memory w
 ![texture1](images/texture1.png)
 ![texture2](images/texture2.png)
 ![texture3](images/texture3.png)
+
+
+### Texture mapping
+
+Depth buffering is added to enable the perception of depth to the scene.  Fortunately, depth testing in Vulkan can be enabled through creating and adding depth attachment at the renderpass and enabling depth testing in the graphics pipeline. In addition, the depth buffer needs to be created on GPU for sure. 
+
+![depth_buffer](images/depth_buffer.png)
+

@@ -10,6 +10,8 @@
 #include <optional>
 #include <fstream>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -112,7 +114,7 @@ const std::vector<Vertex> vertices = {
 
 const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0,
-    4, 5, 6, 6, 7,4
+    4, 5, 6, 6, 7, 4
 };
 
 struct SwapChainSupportDetails {
