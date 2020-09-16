@@ -11,6 +11,7 @@
 #pragma clang diagnostic pop
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -98,6 +99,11 @@ private:
     VkImageView textureImageView;
     VkSampler textureSampler;
 
+    // depth buffer
+    std::vector<VkImage> depthBufferImages;
+    std::vector<VkDeviceMemory> depthBufferImagesMemory;
+    std::vector<VkImageView> depthBufferImageViews;
+    
     // UBO
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
@@ -127,11 +133,12 @@ private:
     void createDescriptorSets();
     void createCommandBuffers();
     void createSynchronizations();
+    void createDepthBuffers();
     void createTextureImage();
     void createTextureImageView();
     void createTextureSampler();
     
-    VkImageView createImageView(VkImage image, VkFormat format);
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // swapchain recreation:
@@ -148,6 +155,8 @@ private:
     void selectPhysicalDevice();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
+    VkFormat findDepthFormat();
+    bool hasStencilComponent(VkFormat format);
     
     // getters
     std::vector<const char*> getRequiredExtensions();
