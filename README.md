@@ -1,6 +1,6 @@
 # Vulkan_First_Project
 
-A simple vulkan project adapted from: https://vulkan-tutorial.com/, with some of my own experimentations.
+A simple vulkan project adapted from: https://vulkan-tutorial.com/, with some of my own experimentations. The program runs on macOS 10.15.6 with 2.7 GHz Quad-Core Intel Core i5 CPU processor, 8GB 1600 MHz DDR3 memory, and Intel Iris Pro 1536 MB integrated GPU.
 
 ## Triangle
 
