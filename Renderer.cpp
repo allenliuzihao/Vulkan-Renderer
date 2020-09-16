@@ -17,9 +17,9 @@ void Renderer::init(GLFWwindow* window){
         createDescriptorSetLayout();
         createPushConstantRange();
         createGraphicsPipeline();
-        createFramebuffers();
         createCommandPool();
         createDepthBuffers();
+        createFramebuffers();
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
@@ -302,8 +302,8 @@ void Renderer::recreateSwapchain(){
     createImageViews();
     createRenderPass();
     createGraphicsPipeline();
-    createFramebuffers();
     createDepthBuffers();
+    createFramebuffers();
     createUniformBuffers();
     updateUniformBuffers();
     createDescriptorPool();
@@ -401,10 +401,26 @@ void Renderer::createRenderPass(){
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        
+    VkAttachmentDescription depthAttachment{};
+    depthAttachment.format = findDepthFormat();
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    
+    std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
     
     VkAttachmentReference colorAttachmentRef{};
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;           // when subpass starts, color attachment will be in this layout.
+    
+    VkAttachmentReference depthAttachmentRef{};
+    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     
     std::array<VkSubpassDependency, 1> subpassDependencies;
     
@@ -418,16 +434,16 @@ void Renderer::createRenderPass(){
     subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-    
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;                                // subpass needs to reference attachment
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
     
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+    renderPassInfo.pAttachments = attachments.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
@@ -610,7 +626,8 @@ void Renderer::createFramebuffers() {
     
     for(size_t i = 0; i < swapchainImageViews.size(); ++i){
         std::vector<VkImageView> attachments = {
-            swapchainImageViews[i]
+            swapchainImageViews[i],
+            depthBufferImageViews[i]
         };
         
         VkFramebufferCreateInfo framebufferInfo{};
@@ -661,26 +678,26 @@ void Renderer::createDepthBuffers(){
     depthBufferImages.resize(swapchainImages.size());
     depthBufferImagesMemory.resize(swapchainImages.size());
     depthBufferImageViews.resize(swapchainImages.size());
-    
-    VkFormat depthFormat = findDepthFormat();
-    
+        
     QueueFamilyIndices ids = { queueFamilyIndices.graphicsFamily, {}, {} };
 
+    VkFormat depthBufferFormat = findDepthFormat();
+    
     VkCommandBuffer commandBuffer = setUpCommandBuffer(device, graphicsCommandPool);
     for(size_t i = 0; i < swapchainImages.size(); ++i){
         createImage(device,
                     physicalDevice,
                     ids,
                     swapchainExtent.width, swapchainExtent.height,
-                    depthFormat,
+                    depthBufferFormat,
                     VK_IMAGE_TILING_OPTIMAL,
                     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                     depthBufferImages[i], depthBufferImagesMemory[i]);
-        depthBufferImageViews[i] = createImageView(depthBufferImages[i], depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        depthBufferImageViews[i] = createImageView(depthBufferImages[i], depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     
         transitionImageLayout(commandBuffer,
                               depthBufferImages[i],
-                              depthFormat,
+                              depthBufferFormat,
                               VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
     flushSetupCommands(device, commandBuffer, graphicsCommandPool, graphicsQueue);
@@ -847,7 +864,7 @@ void Renderer::createCommandBuffers(){
     cbAllocInfo.commandPool = graphicsCommandPool;
     cbAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;    // send to queue directly
     cbAllocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-    
+        
     VkResult result = vkAllocateCommandBuffers(device, &cbAllocInfo, commandBuffers.data());
     if(result != VK_SUCCESS){
         throw std::runtime_error("failed to allocate command buffers.");
@@ -869,11 +886,13 @@ void Renderer::recordCommands(uint32_t currentImage){
     renderPassInfo.framebuffer = swapchainFramebuffers[currentImage];
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapchainExtent;
-    std::vector<VkClearValue> clearColors = {
-        {0.0f, 0.0f, 0.0f, 1.0f}
-    };
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
-    renderPassInfo.pClearValues = clearColors.data();
+    
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+    clearValues[1].depthStencil = {1.0f, 0}; // depth and then stencil values
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
     
     vkCmdBeginRenderPass(commandBuffers[currentImage], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     
