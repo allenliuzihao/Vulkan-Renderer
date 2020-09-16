@@ -12,21 +12,18 @@
 
 #include "Utilities.h"
 
-struct Model {
-    glm::mat4 model;
-};
-
 class Mesh{
 public:
     Mesh();
-    Mesh(VkPhysicalDevice newPhysicalDevice,
-         VkDevice newDevice,
+    Mesh(VkPhysicalDevice physicalDevice,
+         VkDevice device,
          VkQueue transferQueue,
          VkCommandPool transferCommandPool,
-         std::vector<Vertex>* vertices, std::vector<uint32_t>* indicies, int newTexId);
+         const QueueFamilyIndices &indices,
+         const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indicies, int newTexId);
     
     void setModel(glm::mat4 newModel);
-    Model getModel();
+    glm::mat4 getModel();
     
     int getTexId();
     
@@ -40,7 +37,7 @@ public:
     
     ~Mesh();
 private:
-    Model model;
+    glm::mat4 model;
     
     int texId;
     
@@ -55,8 +52,14 @@ private:
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     
-    void createVertexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex> *vertices);
-    void createIndexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<uint32_t> *indices);
+    void createVertexBuffer(VkQueue transferQueue,
+                            VkCommandPool transferCommandPool,
+                            const QueueFamilyIndices &queueFamilyIndices,
+                            const std::vector<Vertex> &vertices);
+    void createIndexBuffer(VkQueue transferQueue,
+                           VkCommandPool transferCommandPool,
+                           const QueueFamilyIndices &queueFamilyIndices,
+                           const std::vector<uint32_t> &indices);
 };
 
 #endif /* Mesh_hpp */

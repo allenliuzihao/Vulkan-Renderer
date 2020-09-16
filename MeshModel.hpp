@@ -21,8 +21,11 @@ public:
     void destroyMeshModel();
     
     static std::vector<std::string> LoadMaterials();
-    static std::vector<Mesh> LoadNode();
-    static Mesh LoadMesh();
+    //static std::vector<Mesh> LoadNode();
+    static Mesh LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
+                         VkQueue transferQueue, VkCommandPool transferCommandPool,
+                         const QueueFamilyIndices & queueFamilyIndices,
+                         const std::vector<int> &matToTex);
     
     ~MeshModel();
     
