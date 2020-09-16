@@ -26,7 +26,7 @@ For this milestone I added descriptor sets support for view and projection matri
 ![descriptor_set_push_constant_2](images/descriptor_set_push_constant_2.png)
 
 
-### Texture mapping
+### Texture Mapping
 
 I added functionaltiy to: 1) load images from CPU buffer to GPU texture memory while handling image layout transitions, 2) pass texture image as descriptors and descriptor sets to graphics pipeline for shader read, 3) create texture sampler to sample textures from the fragment shader. 
 
@@ -35,7 +35,7 @@ I added functionaltiy to: 1) load images from CPU buffer to GPU texture memory w
 ![texture3](images/texture3.png)
 
 
-### Texture mapping
+### Depth Testing
 
 Depth buffering is added to enable the perception of depth to the scene.  Fortunately, depth testing in Vulkan can be enabled through creating and adding depth attachment at the renderpass and enabling depth testing in the graphics pipeline. In addition, the depth buffer needs to be created on GPU for sure. 
 
