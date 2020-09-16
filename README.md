@@ -1,5 +1,6 @@
 # Vulkan_First_Project
-Vulkan project from the tutorial at: https://vulkan-tutorial.com/, with some experimentations.
+
+A simple vulkan project adapted from: https://vulkan-tutorial.com/, with some of my own experimentations.
 
 ## Triangle
 
