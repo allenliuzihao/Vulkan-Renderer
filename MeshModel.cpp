@@ -1,8 +1,8 @@
 #include "MeshModel.hpp"
 
 MeshModel::MeshModel(std::vector<Mesh> newMeshList){
-    meshList = newMeshList;
     model = glm::mat4(1.0f);
+    meshList = newMeshList;
 }
 
 MeshModel::~MeshModel(){}
@@ -33,30 +33,31 @@ void MeshModel::destroyMeshModel(){
 }
 
 std::vector<std::string> MeshModel::LoadMaterials(){
-    return { TEXTURE_PATH };
+    return { "Textures/texture.jpg" };
 }
 
 Mesh MeshModel::LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
                          VkQueue transferQueue, VkCommandPool transferCommandPool,
                          const QueueFamilyIndices &queueFamilyIndices,
                          const std::vector<int> &matToTex){
-    //std::vector<Vertex> vertices;
-    //std::vector<uint32_t> indices;
-    /*
-     (VkPhysicalDevice physicalDevice,
-     VkDevice device,
-     VkQueue transferQueue,
-     VkCommandPool transferCommandPool,
-     const QueueFamilyIndices &indices,
-     const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indicies, int newTexId)
-     */
-    
     std::vector<Vertex> v = vertices;
     std::vector<uint32_t> i = indices;
     
-    return Mesh(newPhysicalDevice, newDevice,
-                transferQueue, transferCommandPool,
-                queueFamilyIndices,
-                v, i, matToTex[0]);
+    return Mesh(newPhysicalDevice, newDevice, transferQueue, transferCommandPool, queueFamilyIndices, v, i, matToTex[0]);
 }
 
+std::vector<Mesh> MeshModel::LoadMeshes(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
+                                       VkQueue transferQueue, VkCommandPool transferCommandPool,
+                                       const QueueFamilyIndices & queueFamilyIndices,
+                                       const std::vector<int> &matToTex){
+    return { LoadMesh(newPhysicalDevice, newDevice, transferQueue, transferCommandPool, queueFamilyIndices, matToTex) };
+}
+
+void MeshModel::updateModel(){
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();       // in seconds
+        
+    model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));;
+}

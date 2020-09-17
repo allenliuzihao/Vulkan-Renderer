@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <stdexcept>
 #include <vector>
 #include <array>
@@ -14,6 +15,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+const int MAX_OBJECTS = 20;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const uint32_t WIDTH = 800;

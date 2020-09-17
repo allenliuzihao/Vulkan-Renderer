@@ -10,7 +10,7 @@ layout(location = 1) in vec2 fragTexCoord;
 // to subpass's ith reference to render pass's color attachments.
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(set = 1, binding = 0) uniform sampler2D texSampler;
 
 void main(){
     outColor = texture(texSampler, fragTexCoord);

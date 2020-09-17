@@ -15,7 +15,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <chrono>
 #include <cstdlib>
 #include <cstdint> // Necessary for UINT32_MAX
 #include <iostream>
@@ -25,10 +24,11 @@
 #include <array>
 #include <unordered_set>
 
-
 #include "stb_image.h"
 
 #include "Utilities.h"
+#include "Mesh.hpp"
+#include "MeshModel.hpp"
 
 class Renderer{
 public:
@@ -37,11 +37,17 @@ public:
     void draw();
     void setFramebufferResized(bool resized);
     
+    int createMeshModel(std::string modelFile);
+    void updateModel(int modelId);
+    
 private:    
     // window
     GLFWwindow* wd;
     bool framebufferResized = false;
-
+    
+    // model
+    std::vector<MeshModel> modelList;
+    
     // vulkan instance
     VkInstance instance;
     
@@ -72,7 +78,9 @@ private:
     
     // pipeline
     VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSetLayout samplerSetLayout;
     VkPipelineLayout pipelineLayout;
+    VkPushConstantRange pushConstantRange;
     VkPipeline graphicsPipeline;
     
     // commands
@@ -87,16 +95,10 @@ private:
     std::vector<VkFence> inFlightFences;
     std::vector<VkFence> imagesInFlight;
     
-    // buffers
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-    
     // images and textures
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
+    std::vector<VkImage> textureImages;
+    std::vector<VkDeviceMemory> textureImagesMemory;
+    std::vector<VkImageView> textureImageViews;
     VkSampler textureSampler;
 
     // depth buffer
@@ -110,8 +112,9 @@ private:
     
     // descriptors and push constants
     VkDescriptorPool descriptorPool;
+    VkDescriptorPool samplerDescriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
-    VkPushConstantRange pushConstantRange;
+    std::vector<VkDescriptorSet> samplerDescriptorSets;
     
     // helper functions
     // creators
@@ -126,17 +129,18 @@ private:
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
-    void createVertexBuffer();
-    void createIndexBuffer();
     void createUniformBuffers();
     void createDescriptorPool();
     void createDescriptorSets();
     void createCommandBuffers();
     void createSynchronizations();
     void createDepthBuffers();
-    void createTextureImage();
-    void createTextureImageView();
     void createTextureSampler();
+    
+    void createSamplerDescriptorPool();
+    int createTextureDescriptor(VkImageView textureImage);
+    int createTextureImage(std::string fileName);
+    int createTexture(std::string fileName);
     
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     VkShaderModule createShaderModule(const std::vector<char>& code);
@@ -160,7 +164,6 @@ private:
     // getters
     std::vector<const char*> getRequiredExtensions();
     SwapChainSupportDetails querySwapchainSupport(VkPhysicalDevice);
-    PushConstantModel getModelUpdate();
 
     // chooser
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);

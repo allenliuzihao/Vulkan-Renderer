@@ -3,7 +3,9 @@
 
 #pragma once
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Mesh.hpp"
 
@@ -20,13 +22,17 @@ public:
     
     void destroyMeshModel();
     
+    void updateModel();
+    
     static std::vector<std::string> LoadMaterials();
-    //static std::vector<Mesh> LoadNode();
     static Mesh LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
                          VkQueue transferQueue, VkCommandPool transferCommandPool,
                          const QueueFamilyIndices & queueFamilyIndices,
                          const std::vector<int> &matToTex);
-    
+    static std::vector<Mesh> LoadMeshes(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
+                                        VkQueue transferQueue, VkCommandPool transferCommandPool,
+                                        const QueueFamilyIndices & queueFamilyIndices,
+                                        const std::vector<int> &matToTex);
     ~MeshModel();
     
 private:

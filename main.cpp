@@ -31,13 +31,14 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     
     renderer.init(window);
+    int testModel = renderer.createMeshModel("testModel");
     
     glfwSetWindowUserPointer(window, &renderer);
-    
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
+        renderer.updateModel(testModel);
         renderer.draw();
     }
 
