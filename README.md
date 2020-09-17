@@ -42,3 +42,11 @@ Depth buffering is added to enable the perception of depth to the scene.  Fortun
 
 ![depth_buffer](images/depth_buffer.png)
 
+
+### Model Loading
+
+Model loading is enabled with two custom classes: Mesh and MeshModel. Essentially a library is used to load in a model file that contains vertex positions, texture coordinates, and normals. Once they are imported, the model loader will set the vertices and indices on the GPU to render the model.
+
+![depth_buffer](images/model_load1.png)
+![depth_buffer](images/model_load2.png)
+![depth_buffer](images/model_load3.png)

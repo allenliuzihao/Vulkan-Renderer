@@ -54,6 +54,8 @@ Mesh MeshModel::LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     
+    std::unordered_map<Vertex, uint32_t> vertexToIndex;
+    
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
             Vertex vertex{};
@@ -64,12 +66,15 @@ Mesh MeshModel::LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
             };
             vertex.texCoord = {
                 attrib.texcoords[2 * index.texcoord_index + 0],
-                attrib.texcoords[2 * index.texcoord_index + 1]
+                1 - attrib.texcoords[2 * index.texcoord_index + 1]
             };
             vertex.color = {1.0f, 1.0f, 1.0f};
             
-            vertices.push_back(vertex);
-            indices.push_back(static_cast<uint32_t>(indices.size()));
+            if(vertexToIndex.find(vertex) == vertexToIndex.end()){
+                vertexToIndex[vertex] = static_cast<uint32_t>(vertices.size());
+                vertices.push_back(vertex);
+            }
+            indices.push_back(vertexToIndex[vertex]);
         }
     }
     
