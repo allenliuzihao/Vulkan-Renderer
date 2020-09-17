@@ -1,3 +1,4 @@
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "MeshModel.hpp"
 
 MeshModel::MeshModel(std::vector<Mesh> newMeshList){
@@ -33,17 +34,46 @@ void MeshModel::destroyMeshModel(){
 }
 
 std::vector<std::string> MeshModel::LoadMaterials(){
-    return { "Textures/texture.jpg" };
+    return { TEXTURE_PATH };
 }
 
 Mesh MeshModel::LoadMesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,
                          VkQueue transferQueue, VkCommandPool transferCommandPool,
                          const QueueFamilyIndices &queueFamilyIndices,
                          const std::vector<int> &matToTex){
-    std::vector<Vertex> v = vertices;
-    std::vector<uint32_t> i = indices;
     
-    return Mesh(newPhysicalDevice, newDevice, transferQueue, transferCommandPool, queueFamilyIndices, v, i, matToTex[0]);
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
+        throw std::runtime_error(warn + err);
+    }
+    
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    
+    for (const auto& shape : shapes) {
+        for (const auto& index : shape.mesh.indices) {
+            Vertex vertex{};
+            vertex.pos = {
+                attrib.vertices[3 * index.vertex_index + 0],
+                attrib.vertices[3 * index.vertex_index + 1],
+                attrib.vertices[3 * index.vertex_index + 2]
+            };
+            vertex.texCoord = {
+                attrib.texcoords[2 * index.texcoord_index + 0],
+                attrib.texcoords[2 * index.texcoord_index + 1]
+            };
+            vertex.color = {1.0f, 1.0f, 1.0f};
+            
+            vertices.push_back(vertex);
+            indices.push_back(static_cast<uint32_t>(indices.size()));
+        }
+    }
+    
+    return Mesh(newPhysicalDevice, newDevice, transferQueue, transferCommandPool, queueFamilyIndices, vertices, indices, matToTex[0]);
 }
 
 std::vector<Mesh> MeshModel::LoadMeshes(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice,

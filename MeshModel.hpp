@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "tiny_obj_loader.h"
+
 #include "Mesh.hpp"
 
 class MeshModel {

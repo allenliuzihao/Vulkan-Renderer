@@ -1020,6 +1020,10 @@ int Renderer::createTextureDescriptor(VkImageView textureImage){
 }
 
 int Renderer::createTexture(std::string fileName){
+    if(textureImages.size() >= MAX_OBJECTS){
+        throw std::runtime_error("number of textures created exceeds the MAX_OBJECTS");
+    }
+    
     int textureImageLoc = createTextureImage(fileName);
     VkImageView imageView = createImageView(textureImages[textureImageLoc], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
     textureImageViews.push_back(imageView);
