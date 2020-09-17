@@ -4,7 +4,7 @@ A simple vulkan project adapted from: https://vulkan-tutorial.com/, with some of
 
 ## Triangle
 
-Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers, push constants and descriptor sets, texture mapping, and depth testing.
+Getting this triangle on screen involves several concepts in Vulkan, including surface, swapchain, renderpass, framebuffers, fences and semaphores, index and vertex buffers, push constants and descriptor sets, texture mapping, and depth testing. I also included a model and a mesh class for importing 3D models and assets.
 
 ### Resizable Window
 
