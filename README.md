@@ -50,3 +50,11 @@ Model loading is enabled with two custom classes: Mesh and MeshModel. Essentiall
 ![depth_buffer](images/model_load1.png)
 ![depth_buffer](images/model_load2.png)
 ![depth_buffer](images/model_load3.png)
+
+
+### Level of Detail
+
+LOD is enabled with the mipmap of the texture image. In Vulkan, mipmap for an image can be generated at runtime with vkCmdBlitImage and pipeline barrier to synchronize resource access. Sampler then need to be tweaked to have linear blending between LOD levels. 
+
+![lod1](images/lod1.png)
+![lod2](images/lod2.png)

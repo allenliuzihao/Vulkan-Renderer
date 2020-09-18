@@ -134,7 +134,3 @@ void Mesh::setModel(glm::mat4 newModel){
 glm::mat4 Mesh::getModel(){
     return model;
 }
-
-
-
-

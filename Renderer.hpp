@@ -96,6 +96,7 @@ private:
     std::vector<VkFence> imagesInFlight;
     
     // images and textures
+    uint32_t mipLevels;
     std::vector<VkImage> textureImages;
     std::vector<VkDeviceMemory> textureImagesMemory;
     std::vector<VkImageView> textureImageViews;
@@ -142,7 +143,7 @@ private:
     int createTextureImage(std::string fileName);
     int createTexture(std::string fileName);
     
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // swapchain recreation:
