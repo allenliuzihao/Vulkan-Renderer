@@ -18,6 +18,7 @@ void Renderer::init(GLFWwindow* window){
         createPushConstantRange();
         createGraphicsPipeline();
         createCommandPool();
+        createColorBuffers();
         createDepthBuffers();
         createFramebuffers();
         createTextureSampler();
@@ -160,6 +161,11 @@ void Renderer::cleanUpSwapchain(){
         vkDestroyImageView(device, swapchainImageViews[i], nullptr);
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+        
+        // clear color buffer
+        vkDestroyImageView(device, colorImageViews[i], nullptr);
+        vkDestroyImage(device, colorImages[i], nullptr);
+        vkFreeMemory(device, colorImagesMemory[i], nullptr);
         
         // clean depth buffer
         vkDestroyImageView(device, depthBufferImageViews[i], nullptr);
@@ -313,6 +319,7 @@ void Renderer::recreateSwapchain(){
     createImageViews();
     createRenderPass();
     createGraphicsPipeline();
+    createColorBuffers();
     createDepthBuffers();
     createFramebuffers();
     createUniformBuffers();
@@ -712,7 +719,8 @@ void Renderer::createDepthBuffers(){
         createImage(device,
                     physicalDevice,
                     ids,
-                    swapchainExtent.width, swapchainExtent.height, 1,
+                    swapchainExtent.width, swapchainExtent.height,
+                    1, msaaSamples,
                     depthBufferFormat,
                     VK_IMAGE_TILING_OPTIMAL,
                     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -950,7 +958,8 @@ int Renderer::createTextureImage(std::string fileName){
     createImage(device,
                 physicalDevice,
                 indices,
-                texWidth, texHeight, mipLevels,
+                texWidth, texHeight,
+                mipLevels, VK_SAMPLE_COUNT_1_BIT,
                 VK_FORMAT_R8G8B8A8_SRGB,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -1015,6 +1024,25 @@ int Renderer::createTextureDescriptor(VkImageView textureImage){
     samplerDescriptorSets.push_back(descriptorSet);
     
     return static_cast<int>(samplerDescriptorSets.size() - 1);
+}
+
+void Renderer::createColorBuffers(){
+    colorImages.resize(swapchainImages.size());
+    colorImagesMemory.resize(swapchainImages.size());
+    colorImageViews.resize(swapchainImages.size());
+    
+    QueueFamilyIndices indices = { queueFamilyIndices.graphicsFamily, {}, {}};
+    for(int i = 0; i < swapchainImages.size(); ++i){
+        createImage(device, physicalDevice,
+                    indices,
+                    swapchainExtent.width, swapchainExtent.height,
+                    1, msaaSamples,
+                    swapchainImageFormat,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImages[i], colorImagesMemory[i]);
+        colorImageViews[i] = createImageView(colorImages[i], swapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    }
 }
 
 int Renderer::createTexture(std::string fileName){

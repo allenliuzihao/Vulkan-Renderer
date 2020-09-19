@@ -119,6 +119,9 @@ private:
     
     // MSAA
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    std::vector<VkImage> colorImages;
+    std::vector<VkDeviceMemory> colorImagesMemory;
+    std::vector<VkImageView> colorImageViews;
     
     // helper functions
     // creators
@@ -140,8 +143,9 @@ private:
     void createSynchronizations();
     void createDepthBuffers();
     void createTextureSampler();
-    
     void createSamplerDescriptorPool();
+    void createColorBuffers();
+    
     int createTextureDescriptor(VkImageView textureImage);
     int createTextureImage(std::string fileName);
     int createTexture(std::string fileName);

@@ -294,7 +294,8 @@ static inline void copyBuffer(VkCommandBuffer commandBuffer,
 static inline void createImage(VkDevice device,
                                VkPhysicalDevice physicalDevice,
                                QueueFamilyIndices& indices,
-                               VkDeviceSize width, VkDeviceSize height, uint32_t mipLevels,
+                               VkDeviceSize width, VkDeviceSize height,
+                               uint32_t mipLevels, VkSampleCountFlagBits numSamples,
                                VkFormat format,
                                VkImageTiling tiling,
                                VkBufferUsageFlags usage,
@@ -312,7 +313,7 @@ static inline void createImage(VkDevice device,
     imageInfo.tiling = tiling;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage = usage;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.samples = numSamples;
 
     std::unordered_set<uint32_t> indicesSet = indices.toSet();
     
