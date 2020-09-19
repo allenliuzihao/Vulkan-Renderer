@@ -58,3 +58,11 @@ LOD is enabled with the mipmap of the texture image. In Vulkan, mipmap for an im
 
 ![lod1](images/lod1.png)
 ![lod2](images/lod2.png)
+
+
+### MSAA
+
+MSAA can be enabled in Vulkan to avoid aliasing artifacts. The images below smoothen the jaggies of images above.
+
+![msaa1](images/msaa1.png)
+![msaa2](images/msaa2.png)

@@ -1092,7 +1092,7 @@ void Renderer::createTextureSampler(){
     
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias = 0.0f;
-    samplerInfo.minLod = static_cast<float>(6);
+    samplerInfo.minLod = static_cast<float>(0);
     samplerInfo.maxLod = static_cast<float>(mipLevels - 1);
     
     if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
