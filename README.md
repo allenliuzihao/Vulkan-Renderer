@@ -66,3 +66,5 @@ MSAA can be enabled in Vulkan to avoid aliasing artifacts. The images below smoo
 
 ![msaa1](images/msaa1.png)
 ![msaa2](images/msaa2.png)
+
+Finally, sample rate shading can be enabled to further increase the visual quality by shading multiple samples per fragment. This can be useful to preserve the visual appearance of the interior of a textured polygon to preserve the texture details.

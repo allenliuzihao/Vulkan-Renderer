@@ -279,6 +279,7 @@ void Renderer::createLogicalDevice(){
     
     VkPhysicalDeviceFeatures deviceFeatures {};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
+    deviceFeatures.sampleRateShading = VK_TRUE;
     
     VkDeviceCreateInfo createInfo {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -601,7 +602,8 @@ void Renderer::createGraphicsPipeline(){
     
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_FALSE;                            // one fragment one sample
+    multisampling.sampleShadingEnable = VK_TRUE;                             // one fragment one sample
+    multisampling.minSampleShading = 0.2f;
     multisampling.rasterizationSamples = msaaSamples;                        // one pixel one sample so which ever fragment is in front has the pixel
     
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
