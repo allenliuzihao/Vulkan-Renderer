@@ -1081,6 +1081,7 @@ void Renderer::selectPhysicalDevice(){
     
     for(const auto & device: devices){
         if(isDeviceSuitable(device)){
+            msaaSamples = getMaxUsableSampleCount(device);
             physicalDevice = device;
             break;
         }

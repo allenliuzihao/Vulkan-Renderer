@@ -117,6 +117,9 @@ private:
     std::vector<VkDescriptorSet> descriptorSets;
     std::vector<VkDescriptorSet> samplerDescriptorSets;
     
+    // MSAA
+    VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    
     // helper functions
     // creators
     void createInstance();
