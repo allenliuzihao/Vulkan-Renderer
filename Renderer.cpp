@@ -18,8 +18,8 @@ void Renderer::init(GLFWwindow* window){
         createPushConstantRange();
         createGraphicsPipeline();
         createCommandPool();
-        createColorBuffers();
-        createDepthBuffers();
+        createColorBuffer();
+        createDepthBuffer();
         createFramebuffers();
         createTextureSampler();
         createUniformBuffers();
@@ -157,20 +157,21 @@ void Renderer::cleanUpSwapchain(){
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    
+    // clear color buffer
+    vkDestroyImageView(device, colorImageView, nullptr);
+    vkDestroyImage(device, colorImage, nullptr);
+    vkFreeMemory(device, colorImageMemory, nullptr);
+    
+    // clean depth buffer
+    vkDestroyImageView(device, depthBufferImageView, nullptr);
+    vkDestroyImage(device, depthBufferImage, nullptr);
+    vkFreeMemory(device, depthBufferImageMemory, nullptr);
+    
     for (size_t i = 0; i < swapchainImageViews.size(); i++) {
         vkDestroyImageView(device, swapchainImageViews[i], nullptr);
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-        
-        // clear color buffer
-        vkDestroyImageView(device, colorImageViews[i], nullptr);
-        vkDestroyImage(device, colorImages[i], nullptr);
-        vkFreeMemory(device, colorImagesMemory[i], nullptr);
-        
-        // clean depth buffer
-        vkDestroyImageView(device, depthBufferImageViews[i], nullptr);
-        vkDestroyImage(device, depthBufferImages[i], nullptr);
-        vkFreeMemory(device, depthBufferImagesMemory[i], nullptr);
     }
 
     vkDestroySwapchainKHR(device, swapchain, nullptr);
@@ -320,8 +321,8 @@ void Renderer::recreateSwapchain(){
     createImageViews();
     createRenderPass();
     createGraphicsPipeline();
-    createColorBuffers();
-    createDepthBuffers();
+    createColorBuffer();
+    createDepthBuffer();
     createFramebuffers();
     createUniformBuffers();
     updateUniformBuffers();
@@ -674,8 +675,8 @@ void Renderer::createFramebuffers() {
     
     for(size_t i = 0; i < swapchainImageViews.size(); ++i){
         std::vector<VkImageView> attachments = {
-            colorImageViews[i],
-            depthBufferImageViews[i],
+            colorImageView,
+            depthBufferImageView,
             swapchainImageViews[i]
         };
         
@@ -723,33 +724,26 @@ VkFormat Renderer::findDepthFormat(){
         );
 }
 
-void Renderer::createDepthBuffers(){
-    depthBufferImages.resize(swapchainImages.size());
-    depthBufferImagesMemory.resize(swapchainImages.size());
-    depthBufferImageViews.resize(swapchainImages.size());
-        
+void Renderer::createDepthBuffer(){
     QueueFamilyIndices ids = { queueFamilyIndices.graphicsFamily, {}, {} };
 
     VkFormat depthBufferFormat = findDepthFormat();
     
     VkCommandBuffer commandBuffer = setUpCommandBuffer(device, graphicsCommandPool);
-    for(size_t i = 0; i < swapchainImages.size(); ++i){
-        createImage(device,
-                    physicalDevice,
-                    ids,
-                    swapchainExtent.width, swapchainExtent.height,
-                    1, msaaSamples,
-                    depthBufferFormat,
-                    VK_IMAGE_TILING_OPTIMAL,
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                    depthBufferImages[i], depthBufferImagesMemory[i]);
-        depthBufferImageViews[i] = createImageView(depthBufferImages[i], depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-    
-        transitionImageLayout(commandBuffer,
-                              depthBufferImages[i],
-                              depthBufferFormat,
-                              VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
-    }
+    createImage(device,
+                physicalDevice,
+                ids,
+                swapchainExtent.width, swapchainExtent.height,
+                1, msaaSamples,
+                depthBufferFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                depthBufferImage, depthBufferImageMemory);
+    depthBufferImageView = createImageView(depthBufferImage, depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    transitionImageLayout(commandBuffer,
+                          depthBufferImage,
+                          depthBufferFormat,
+                          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
     flushSetupCommands(device, commandBuffer, graphicsCommandPool, graphicsQueue);
 }
 
@@ -1044,23 +1038,17 @@ int Renderer::createTextureDescriptor(VkImageView textureImage){
     return static_cast<int>(samplerDescriptorSets.size() - 1);
 }
 
-void Renderer::createColorBuffers(){
-    colorImages.resize(swapchainImages.size());
-    colorImagesMemory.resize(swapchainImages.size());
-    colorImageViews.resize(swapchainImages.size());
-    
+void Renderer::createColorBuffer(){
     QueueFamilyIndices indices = { queueFamilyIndices.graphicsFamily, {}, {}};
-    for(int i = 0; i < swapchainImages.size(); ++i){
-        createImage(device, physicalDevice,
-                    indices,
-                    swapchainExtent.width, swapchainExtent.height,
-                    1, msaaSamples,
-                    swapchainImageFormat,
-                    VK_IMAGE_TILING_OPTIMAL,
-                    VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImages[i], colorImagesMemory[i]);
-        colorImageViews[i] = createImageView(colorImages[i], swapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-    }
+    createImage(device, physicalDevice,
+                indices,
+                swapchainExtent.width, swapchainExtent.height,
+                1, msaaSamples,
+                swapchainImageFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+    colorImageView = createImageView(colorImage, swapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
 int Renderer::createTexture(std::string fileName){

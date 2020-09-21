@@ -101,11 +101,6 @@ private:
     std::vector<VkDeviceMemory> textureImagesMemory;
     std::vector<VkImageView> textureImageViews;
     VkSampler textureSampler;
-
-    // depth buffer
-    std::vector<VkImage> depthBufferImages;
-    std::vector<VkDeviceMemory> depthBufferImagesMemory;
-    std::vector<VkImageView> depthBufferImageViews;
     
     // UBO
     std::vector<VkBuffer> uniformBuffers;
@@ -119,9 +114,18 @@ private:
     
     // MSAA
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-    std::vector<VkImage> colorImages;
-    std::vector<VkDeviceMemory> colorImagesMemory;
-    std::vector<VkImageView> colorImageViews;
+    VkImage colorImage;
+    VkDeviceMemory colorImageMemory;
+    VkImageView colorImageView;
+    
+    // depth buffer
+    VkImage depthBufferImage;
+    VkDeviceMemory depthBufferImageMemory;
+    VkImageView depthBufferImageView;
+    
+    // Note: only one color and one depth buffer are needed due to the availability of one graphics pipeline
+    // despite the fact that multiple frames are inflight. The drawing operations in the pipeline is one frame at the time so
+    // these buffers can be shared amongst multiple inflight frames no problem.
     
     // helper functions
     // creators
@@ -141,10 +145,10 @@ private:
     void createDescriptorSets();
     void createCommandBuffers();
     void createSynchronizations();
-    void createDepthBuffers();
+    void createDepthBuffer();
     void createTextureSampler();
     void createSamplerDescriptorPool();
-    void createColorBuffers();
+    void createColorBuffer();
     
     int createTextureDescriptor(VkImageView textureImage);
     int createTextureImage(std::string fileName);
